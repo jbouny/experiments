@@ -22,7 +22,7 @@ var DEMO =
 		this.ms_Scene = new THREE.Scene();
 
 		this.ms_Camera = new THREE.PerspectiveCamera( 55.0, WINDOW.ms_Width / WINDOW.ms_Height, 0.5, 1000000 );
-		this.ms_Camera.position.set( 500, 700, 1500 );
+		this.ms_Camera.position.set( 500, 1100, 2200 );
 		this.ms_Camera.lookAt( new THREE.Vector3( 0, 0, 0 ) );
 		this.ms_Scene.add( this.ms_Camera );
 

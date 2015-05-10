@@ -41,16 +41,18 @@ THREE.ShaderChunk["screenplane_pars_vertex"] = [
 
 		'vec2 getImagePlan()',
 		'{',
+      // http://www.terathon.com/gdc07_lengyel.pdf
 			// Extracting aspect and focal from projection matrix:
+      // e = focal, h = height, w = width, P = projection matrix
 			// P = | e   0       0   0 |
 			//     | 0   e/(h/w) 0   0 |
 			//     | 0   0       .   . |
 			//     | 0   0       -1  0 |
 		'	float focal = projectionMatrix[0].x;',
-		'	float aspect = projectionMatrix[1].y;',
+		'	float focalY = projectionMatrix[1].y;',
 			
 			// Fix coordinate aspect and scale
-		'	return vec2( ( uv.x - 0.5 ) * screenScale * aspect, ( uv.y - 0.5 ) * screenScale * focal );',
+		'	return vec2( ( uv.x - 0.5 ) * screenScale * focalY, ( uv.y - 0.5 ) * screenScale * focal );',
 		'}',
 		
 		'vec3 getCamRay( in mat3 rotation, in vec2 screenUV )',
