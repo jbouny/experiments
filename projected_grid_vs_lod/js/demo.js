@@ -83,7 +83,7 @@ var DEMO =
     this.ChangeAnimateMaterial();
     
     // Add custom geometry
-    this.InitGeometry( 64 );
+    this.InitGeometry( 16 );
 	},
   
   InitGeometry : function InitGeometry( size ) {
@@ -98,20 +98,21 @@ var DEMO =
     var geometry = new THREE.BufferGeometry();
     var halfSize = Math.round( size * 0.5 );
 		
-		var nbPoints = size * size;
-		var indices = ( size - 1 ) * ( size - 1 ) * 2 * 3 ;
-		geometry.addAttribute( 'index', new THREE.BufferAttribute(new Uint32Array( indices ), 1) );
+		var nbPoints = ( size + 1 ) * ( size + 1 );
+		var nbTriangles = size * size * 2 ;
+		geometry.addAttribute( 'index', new THREE.BufferAttribute(new Uint32Array( nbTriangles * 3 ), 1) );
 		geometry.addAttribute( 'position', new THREE.BufferAttribute(new Float32Array( nbPoints * 3 ), 3) );
 		geometry.addAttribute( 'normals', new THREE.BufferAttribute(new Float32Array( nbPoints * 3 ), 3) );
     
+    // Generate 3d vertices and normals
     {
       var positions = geometry.getAttribute( 'position' ).array;
       var normals = geometry.getAttribute( 'normals' ).array;
       var index = 0;
       
-      for( var x = 0; x < size; ++x )
+      for( var x = 0; x <= size; ++x )
       {
-        for( var z = 0; z < size; ++z )
+        for( var z = 0; z <= size; ++z )
         {
           normals[index] = 0;
           normals[index + 1] = 1;
@@ -124,10 +125,12 @@ var DEMO =
       }
     }
 		
+    // Generate triangles with vertices indices
     {
       var indices = geometry.getAttribute( 'index' ).array;
       var index = 0;
-      
+      var iter = 0;
+      var width = size + 1;
       for( var x = 0; x < size; ++x )
       {
         var left = x,
@@ -138,14 +141,14 @@ var DEMO =
               back = z + 1;
               
           // First triangle
-          indices[index++] =  size * right + back;
-          indices[index++] =  size * left + back;
-          indices[index++] =  size * left + front;
+          indices[index++] = width * left + back;
+          indices[index++] = width * right + back;
+          indices[index++] = width * left + front;
           
           // Second triangle
-          indices[index++] =  size * right + front;
-          indices[index++] =  size * right + back;
-          indices[index++] =  size * left + front;
+          indices[index++] = width * left + front;
+          indices[index++] = width * right + back
+          indices[index++] = width * right + front;
         }
       }
     }
@@ -157,11 +160,11 @@ var DEMO =
       vertexShader: oceanShader.buildVertexShader( 'lod' ),
       fragmentShader: oceanShader.fragmentShader,
       side: THREE.DoubleSide,
-      wireframe: true
+      //wireframe: true
     });
     
     var mesh = new THREE.Mesh( geometry, lodMaterial );
-    mesh.scale.set( 10, 10, 10 );
+    mesh.scale.set( 500, 500, 500 );
     this.ms_Scene.add( mesh );
   
   },
@@ -216,6 +219,8 @@ var DEMO =
     if( this.ms_Update ) {
       this.ms_Ocean.oceanMesh.material.uniforms.u_time.value += this.ms_Clock.getDelta();
     }
+    
+    //this.ms_Camera.position.setX( this.ms_Camera.position.x + 1.0 );
     
 		this.ms_Controls.update();
 		this.Display();
