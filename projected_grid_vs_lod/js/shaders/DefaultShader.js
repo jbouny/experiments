@@ -2,7 +2,7 @@
  * @author jbouny / https://github.com/fft-ocean
  */
  
-THREE.ShaderChunk["lod_pars_vertex"] = [
+THREE.ShaderChunk["default_pars_vertex"] = [
 		
 		'vec4 computePosition( vec4 position )',
 		'{',
@@ -11,6 +11,6 @@ THREE.ShaderChunk["lod_pars_vertex"] = [
 	
 ].join('\n');
 
-THREE.ShaderChunk["lod_vertex"] = [
+THREE.ShaderChunk["default_vertex"] = [
 	'worldPosition = computePosition( worldPosition );',
 ].join('\n');
