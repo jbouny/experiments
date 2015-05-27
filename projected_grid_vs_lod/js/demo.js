@@ -43,6 +43,7 @@ var DEMO =
     this.ms_Update = true;
     this.ms_Wireframe = true;
 
+    this.InitGeometry( 1000 );
 		this.InitializeScene();
 
 		this.InitGui();
@@ -81,7 +82,79 @@ var DEMO =
 		} );
     this.ChangeWireframe();
     this.ChangeAnimateMaterial();
+    
+    // Add custom geometry
+    var mesh = new THREE.Mesh( this.ms_PlaneGeometry, new THREE.MeshLambertMaterial( { side: THREE.DoubleSide, color: new THREE.Color( 0.8, 0.5, 0.5 ) } ) );
+    this.ms_Scene.add( mesh );
 	},
+  
+  InitGeometry : function InitGeometry( size ) {
+  
+    size = Math.floor( size );
+  
+    if( size % 2 == 1 ) {
+      console.log( "DEMO.InitGeometry: size should be pair" );
+      size++;
+    }
+  
+    var geometry = new THREE.BufferGeometry();
+    var halfSize = Math.round( size * 0.5 );
+		
+		var nbPoints = size * size;
+		var indices = ( size - 1 ) * ( size - 1 ) * 2 * 3 ;
+		geometry.addAttribute( 'index', new THREE.BufferAttribute(new Uint32Array( indices ), 1) );
+		geometry.addAttribute( 'position', new THREE.BufferAttribute(new Float32Array( nbPoints * 3 ), 3) );
+		geometry.addAttribute( 'normals', new THREE.BufferAttribute(new Float32Array( nbPoints * 3 ), 3) );
+    
+    {
+      var positions = geometry.getAttribute( 'position' ).array;
+      var normals = geometry.getAttribute( 'normals' ).array;
+      var index = 0;
+      
+      for( var x = 0; x < size; ++x )
+      {
+        for( var z = 0; z < size; ++z )
+        {
+          normals[index] = 0;
+          normals[index + 1] = 1;
+          normals[index + 2] = 0;
+        
+          positions[index++] = x - halfSize;
+          positions[index++] = 0;
+          positions[index++] = z - halfSize;
+        }
+      }
+    }
+		
+    {
+      var indices = geometry.getAttribute( 'index' ).array;
+      var index = 0;
+      
+      for( var x = 0; x < size; ++x )
+      {
+        var left = x,
+            right = x + 1;
+        for( var z = 0; z < size; ++z )
+        {
+          var front = z,
+              back = z + 1;
+              
+          // First triangle
+          indices[index++] =  size * right + back;
+          indices[index++] =  size * left + back;
+          indices[index++] =  size * left + front;
+          
+          // Second triangle
+          indices[index++] =  size * right + front;
+          indices[index++] =  size * right + back;
+          indices[index++] =  size * left + front;
+        }
+      }
+    }
+    
+    this.ms_PlaneGeometry = geometry;
+  
+  },
 
 	InitGui : function InitGui() {
 

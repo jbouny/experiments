@@ -90,7 +90,7 @@ THREE.ShaderChunk["screenplane_pars_vertex"] = [
 ].join('\n');
 
 THREE.ShaderChunk["screenplane_vertex"] = [
-	'vec4 screenPlaneWorldPosition = vec4( computeProjectedPosition(), 1.0 );',
+	'worldPosition = vec4( computeProjectedPosition(), 1.0 );',
 ].join('\n');
 
 THREE.ShaderChunk["screenplane_pars_fragment"] = [

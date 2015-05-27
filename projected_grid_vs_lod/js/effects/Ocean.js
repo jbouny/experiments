@@ -14,9 +14,9 @@
 	this.materialOcean = new THREE.ShaderMaterial({
 		attributes: THREE.UniformsUtils.clone(oceanShader.attributes),
 		uniforms: THREE.UniformsUtils.clone(oceanShader.uniforms),
-		vertexShader: oceanShader.vertexShader,
+		vertexShader: oceanShader.buildVertexShader( 'screenplane' ),
 		fragmentShader: oceanShader.fragmentShader,
-		side: THREE.FrontSide,
+		side: THREE.DoubleSide,
 		wireframe: false
 	});
 
