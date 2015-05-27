@@ -43,7 +43,6 @@ var DEMO =
     this.ms_Update = true;
     this.ms_Wireframe = true;
 
-    this.InitGeometry( 1000 );
 		this.InitializeScene();
 
 		this.InitGui();
@@ -84,16 +83,15 @@ var DEMO =
     this.ChangeAnimateMaterial();
     
     // Add custom geometry
-    var mesh = new THREE.Mesh( this.ms_PlaneGeometry, new THREE.MeshLambertMaterial( { side: THREE.DoubleSide, color: new THREE.Color( 0.8, 0.5, 0.5 ) } ) );
-    this.ms_Scene.add( mesh );
+    this.InitGeometry( 64 );
 	},
   
   InitGeometry : function InitGeometry( size ) {
   
     size = Math.floor( size );
   
-    if( size % 2 == 1 ) {
-      console.log( "DEMO.InitGeometry: size should be pair" );
+    if( size % 2 == 1 || size < 1 ) {
+      console.warn( "DEMO.InitGeometry size should be positive or pair" );
       size++;
     }
   
@@ -152,7 +150,19 @@ var DEMO =
       }
     }
     
-    this.ms_PlaneGeometry = geometry;
+    var oceanShader = THREE.ShaderLib["ocean_main"];
+    var lodMaterial = new THREE.ShaderMaterial({
+      attributes: THREE.UniformsUtils.clone(oceanShader.attributes),
+      uniforms: THREE.UniformsUtils.clone(oceanShader.uniforms),
+      vertexShader: oceanShader.buildVertexShader( 'lod' ),
+      fragmentShader: oceanShader.fragmentShader,
+      side: THREE.DoubleSide,
+      wireframe: true
+    });
+    
+    var mesh = new THREE.Mesh( geometry, lodMaterial );
+    mesh.scale.set( 10, 10, 10 );
+    this.ms_Scene.add( mesh );
   
   },
 
