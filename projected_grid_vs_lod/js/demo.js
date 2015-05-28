@@ -83,23 +83,30 @@ var DEMO =
     this.ChangeAnimateMaterial();
     
     // Add custom geometry
-    this.InitGeometry( 16 );
+    this.InitLOD( 128, 13, 2 );
 	},
   
-  InitGeometry : function InitGeometry( size ) {
+  GenerateLODGeometry : function GenerateLODGeometry( dimension, hasHole ) {
   
-    size = Math.floor( size );
+    function optionalParameter(value, defaultValue) {
+      return value !== undefined ? value : defaultValue;
+    };
+    
+    dimension = optionalParameter( dimension, 64 );
+    hasHole = optionalParameter( hasHole, false );
   
-    if( size % 2 == 1 || size < 1 ) {
-      console.warn( "DEMO.InitGeometry size should be positive or pair" );
-      size++;
+    // Guarantee dimension expectations
+    dimension = Math.floor( dimension );
+    if( dimension % 2 == 1 || dimension < 1 ) {
+      console.warn( "DEMO.GenerateLODGeometry dimension should be positive or pair" );
+      dimension++;
     }
-  
+    
     var geometry = new THREE.BufferGeometry();
-    var halfSize = Math.round( size * 0.5 );
+    var halfSize = Math.round( dimension * 0.5 );
 		
-		var nbPoints = ( size + 1 ) * ( size + 1 );
-		var nbTriangles = size * size * 2 ;
+		var nbPoints = ( dimension + 1 ) * ( dimension + 1 );
+		var nbTriangles = dimension * dimension * 2 ;
 		geometry.addAttribute( 'index', new THREE.BufferAttribute(new Uint32Array( nbTriangles * 3 ), 1) );
 		geometry.addAttribute( 'position', new THREE.BufferAttribute(new Float32Array( nbPoints * 3 ), 3) );
 		geometry.addAttribute( 'normals', new THREE.BufferAttribute(new Float32Array( nbPoints * 3 ), 3) );
@@ -110,9 +117,9 @@ var DEMO =
       var normals = geometry.getAttribute( 'normals' ).array;
       var index = 0;
       
-      for( var x = 0; x <= size; ++x )
+      for( var x = 0; x <= dimension; ++x )
       {
-        for( var z = 0; z <= size; ++z )
+        for( var z = 0; z <= dimension; ++z )
         {
           normals[index] = 0;
           normals[index + 1] = 1;
@@ -127,19 +134,25 @@ var DEMO =
 		
     // Generate triangles with vertices indices
     {
-      var indices = geometry.getAttribute( 'index' ).array;
-      var index = 0;
-      var iter = 0;
-      var width = size + 1;
-      for( var x = 0; x < size; ++x )
+      var indices = geometry.getAttribute( 'index' ).array,
+          index = 0,
+          width = dimension + 1,
+          insideLow = dimension / 4,
+          insideHigh = insideLow * 3;
+      for( var x = 0; x < dimension; ++x )
       {
         var left = x,
-            right = x + 1;
-        for( var z = 0; z < size; ++z )
+            right = x + 1,
+            insideXHole = x >= insideLow && x < insideHigh;
+        for( var z = 0; z < dimension; ++z )
         {
           var front = z,
-              back = z + 1;
+              back = z + 1
+              insideZHole = z >= insideLow && z < insideHigh;
               
+          if( hasHole && insideXHole && insideZHole )
+            continue;
+          
           // First triangle
           indices[index++] = width * left + back;
           indices[index++] = width * right + back;
@@ -153,19 +166,57 @@ var DEMO =
       }
     }
     
+    return geometry;
+  
+  },
+  
+  GenerateLODMesh : function GenerateLODMesh( geometry, material, scale ) {
+    
+    var lodMaterial = material.clone();
+    lodMaterial.uniforms.u_scale.value = scale;
+    var mesh = new THREE.Mesh( geometry, lodMaterial );
+    
+    return mesh;
+    
+  },
+  
+  InitLOD : function InitLOD( dimension, levels, initialScale ) {
+  
+    function optionalParameter(value, defaultValue) {
+      return value !== undefined ? value : defaultValue;
+    };
+    
+    dimension = optionalParameter( dimension, 64 );
+    levels = optionalParameter( levels, 10 );
+    initialScale = optionalParameter( initialScale, 5 );
+  
+    var gridGeometry = this.GenerateLODGeometry( dimension );
+    var gridHoleGeometry = this.GenerateLODGeometry( dimension, true );
+    
     var oceanShader = THREE.ShaderLib["ocean_main"];
+    var uniforms = THREE.UniformsUtils.clone(oceanShader.uniforms);
+    uniforms['u_scale'] = { type: 'f', value: 10.0 };
+    
     var lodMaterial = new THREE.ShaderMaterial({
-      attributes: THREE.UniformsUtils.clone(oceanShader.attributes),
-      uniforms: THREE.UniformsUtils.clone(oceanShader.uniforms),
+      uniforms: uniforms,
       vertexShader: oceanShader.buildVertexShader( 'lod' ),
       fragmentShader: oceanShader.fragmentShader,
       side: THREE.DoubleSide,
-      //wireframe: true
+      wireframe: true
     });
     
-    var mesh = new THREE.Mesh( geometry, lodMaterial );
-    mesh.scale.set( 500, 500, 500 );
-    this.ms_Scene.add( mesh );
+    this.ms_LODGroup = new THREE.Object3D();
+    
+    var scale = initialScale;
+    for( var i = 0; i < levels; ++i ) {
+      
+      var geometry = ( i == 0 ? gridGeometry : gridHoleGeometry );
+      this.ms_LODGroup.add( this.GenerateLODMesh( geometry, lodMaterial, scale ) );
+      scale *= 2;
+      
+    }
+    
+    this.ms_Scene.add( this.ms_LODGroup );
   
   },
 

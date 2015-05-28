@@ -3,6 +3,8 @@
  */
  
 THREE.ShaderChunk["lod_pars_vertex"] = [
+    
+		'uniform float u_scale;',
 
     'const float u_squareSize = 500.0;',
     
@@ -31,8 +33,7 @@ THREE.ShaderChunk["lod_pars_vertex"] = [
     ' vec3 cameraPosition = getCameraPos( cameraRotation );',
     
       // Discretise the space and made the grid following the camera
-    ' float scale = modelMatrix[0][0];',
-    ' vec2 pos = ( modelMatrix * position ).xz + floor( cameraPosition.xz / scale + 0.5 ) * scale;',
+    ' vec2 pos = ( position * u_scale ).xz + floor( cameraPosition.xz / u_scale + 0.5 ) * u_scale;',
     ' ',
     ' vec2 modPos = mod( pos, 2.0 );',
     ' ',
