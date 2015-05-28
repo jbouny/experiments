@@ -5,8 +5,7 @@
 THREE.ShaderChunk["lod_pars_vertex"] = [
     
 		'uniform float u_scale;',
-
-    'const float u_squareSize = 500.0;',
+		'uniform int u_resolution;',
     
     'mat3 getRotation()',
     '{',
@@ -22,28 +21,43 @@ THREE.ShaderChunk["lod_pars_vertex"] = [
     '{',
       // Xc = R * Xw + t
       // c = - R.t() * t <=> c = - t.t() * R
-    '  return - viewMatrix[3].xyz * rotation;',
+    ' return - viewMatrix[3].xyz * rotation;',
     '}',
     
     'vec4 computePosition( vec4 position )',
     '{',
-    ' ',
       // Extract the camera position
-    '  mat3 cameraRotation = getRotation();',
+    ' mat3 cameraRotation = getRotation();',
     ' vec3 cameraPosition = getCameraPos( cameraRotation );',
     
       // Discretise the space and made the grid following the camera
-    ' vec2 pos = ( position * u_scale ).xz + floor( cameraPosition.xz / u_scale + 0.5 ) * u_scale;',
-    ' ',
-    ' vec2 modPos = mod( pos, 2.0 );',
-    ' ',
-    ' if( length( modPos ) > 0.5 ) {',
-    '   vec2 neighbor1Pos = pos + modPos;',
-    '   vec2 neighbor2Pos = pos - modPos;',
+    ' float scale = u_scale * pow( 2.0, floor( log2( abs( cameraPosition.y ) ) ) ) * 0.005;',
+    ' float resolution = float( u_resolution );',
+    ' float gridToWorld = scale / resolution;',
+    ' vec2 worldPosition = ( position.xz + floor( cameraPosition.xz / gridToWorld + 0.5 ) / resolution ) * scale;',
+    
+      // Compute the mophing factor
+    ' vec2 comparePos = min( vec2( 1.0 ), max( vec2( 0.0 ), abs( ( cameraPosition.xz - worldPosition ) / ( scale * 0.5 ) ) * 2.0 - 1.0 ) ) ;',
+    ' float morphFactor = max( comparePos.x, comparePos.y );',
+    
+      // Check if it is need to apply the morphing (on 1 square on 2)
+    ' vec2 offset = worldPosition / gridToWorld * 0.5;',
+    ' offset = vec2( offset.x - floor( offset.x ), offset.y - floor( offset.y ) );',
+    ' if( length( offset ) > 0.1 ) {',
+        // Apply morphing on X axis
+    '   if( offset.x > 0.1 ) {',
+    '     worldPosition.x += morphFactor * gridToWorld * ( position.x > 0.0 ? 1.0 : -1.0 );',
+    '   }',
+        // Apply morphing on Y axis
+    '   if( offset.y > 0.1 ) {',
+    '     worldPosition.y += morphFactor * gridToWorld * ( position.z > 0.0 ? 1.0 : -1.0 );',
+    '   }',
     '   ',
     ' }',
     ' ',
-    ' return vec4( pos.x, 0.0, pos.y, 1.0 );',
+    
+      // Return the final position
+    ' return vec4( worldPosition.x, 0.0, worldPosition.y, 1.0 );',
     '}'
   
 ].join('\n');
