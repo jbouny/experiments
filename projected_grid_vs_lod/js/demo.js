@@ -45,8 +45,8 @@ var DEMO =
     this.ms_Update = true;
     this.ms_Wireframe = false;
     this.ms_MeshType = "LOD";
-    this.ms_BasicGridResolution = 128;
-    this.ms_BasicGridSize = 2000;
+    this.ms_BasicGridResolution = 256;
+    this.ms_BasicGridSize = 10000;
 
 		this.InitializeScene();
 
@@ -218,7 +218,7 @@ var DEMO =
     folderLOD.add( DEMO, 'ms_LODInitialScale', 1, 2000 ).name( 'Scale' ).onChange( function() { DEMO.ChangeMesh(); } );
     
     var folderProjected = gui.addFolder('Projected grid');
-    folderProjected.add( DEMO, 'ms_GeometryResolution', 8, 512 ).name( 'Resolution' ).onChange( function() { DEMO.ChangeMesh(); } );
+    folderProjected.add( DEMO, 'ms_GeometryResolution', 8, 1024 ).name( 'Resolution' ).onChange( function() { DEMO.ChangeMesh(); } );
     
     var folderBasic = gui.addFolder('Basic grid');
     folderBasic.add( DEMO, 'ms_BasicGridResolution', 8, 1024 ).name( 'Resolution' ).onChange( function() { DEMO.ChangeMesh(); } );
@@ -268,7 +268,7 @@ var DEMO =
     switch( this.ms_MeshType ) {
       case 'LOD':
         if ( updateAll ) {
-          this.InitLOD( this.ms_LODDimension, this.ms_Levels, this.ms_InitialScale );
+          this.InitLOD( this.ms_LODDimension, this.ms_LODLevels, this.ms_LODInitialScale );
         }
         this.LoadLOD();
         break;
