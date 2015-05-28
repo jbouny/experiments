@@ -4,9 +4,6 @@
 	function optionalParameter(value, defaultValue) {
 		return value !== undefined ? value : defaultValue;
 	};
-	function optionalParameterArray(value, index, defaultValue) {
-		return value !== undefined ? value[index] : defaultValue;
-	};
 	options = options || {};
 	this.geometryResolution = optionalParameter(options.GEOMETRY_RESOLUTION, 32);
   
@@ -22,7 +19,6 @@
 
 	// Generate the ocean mesh
 	this.generateMesh();
-	camera.add( this.oceanMesh );
   
 };
 

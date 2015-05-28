@@ -9,6 +9,8 @@ var DEMO =
 	ms_Scene : null,
 	ms_Controls : null,
 	ms_Ocean : null,
+  ms_PlaneGroup : null,
+  ms_ProjectedGrid : null,
 
 	Initialize : function () {
 
@@ -39,9 +41,12 @@ var DEMO =
 		this.ms_Controls.minPolarAngle = 0;
 		this.ms_Controls.maxPolarAngle = Math.PI * 0.75;
     
-    this.ms_Animate = false;
+    this.ms_Animate = true;
     this.ms_Update = true;
-    this.ms_Wireframe = true;
+    this.ms_Wireframe = false;
+    this.ms_MeshType = "LOD";
+    this.ms_BasicGridResolution = 128;
+    this.ms_BasicGridSize = 2000;
 
 		this.InitializeScene();
 
@@ -79,11 +84,13 @@ var DEMO =
 		{
 			GEOMETRY_RESOLUTION: this.ms_GeometryResolution
 		} );
-    this.ChangeWireframe();
-    this.ChangeAnimateMaterial();
     
     // Add custom geometry
-    this.InitLOD( 128, 13, 2 );
+    this.InitLOD( 128, 8, 500 );
+    this.ChangeMesh();
+    
+    this.ChangeWireframe();
+    this.ChangeAnimateMaterial();
 	},
   
   GenerateLODGeometry : function GenerateLODGeometry( dimension, hasHole ) {
@@ -98,15 +105,15 @@ var DEMO =
     // Guarantee dimension expectations
     dimension = Math.floor( dimension );
     if( dimension % 2 == 1 || dimension < 1 ) {
-      console.warn( "DEMO.GenerateLODGeometry dimension should be positive or pair" );
+      //console.warn( "DEMO.GenerateLODGeometry dimension should be positive or pair" );
       dimension++;
     }
     
     var geometry = new THREE.BufferGeometry();
     var halfSize = Math.round( dimension * 0.5 );
 		
-		var nbPoints = ( dimension + 1 ) * ( dimension + 1 );
-		var nbTriangles = dimension * dimension * 2 ;
+		var nbPoints = ( dimension + 3 ) * ( dimension + 3 );
+		var nbTriangles = ( dimension + 2 ) * ( dimension + 2 ) * 2 ;
 		geometry.addAttribute( 'index', new THREE.BufferAttribute(new Uint32Array( nbTriangles * 3 ), 1) );
 		geometry.addAttribute( 'position', new THREE.BufferAttribute(new Float32Array( nbPoints * 3 ), 3) );
 		geometry.addAttribute( 'normals', new THREE.BufferAttribute(new Float32Array( nbPoints * 3 ), 3) );
@@ -117,17 +124,17 @@ var DEMO =
       var normals = geometry.getAttribute( 'normals' ).array;
       var index = 0;
       
-      for( var x = 0; x <= dimension; ++x )
+      for( var x = -halfSize - 1; x <= halfSize + 1; ++x )
       {
-        for( var z = 0; z <= dimension; ++z )
+        for( var z = -halfSize - 1; z <= halfSize + 1; ++z )
         {
           normals[index] = 0;
           normals[index + 1] = 1;
           normals[index + 2] = 0;
         
-          positions[index++] = x - halfSize;
+          positions[index++] = x / dimension;
           positions[index++] = 0;
-          positions[index++] = z - halfSize;
+          positions[index++] = z / dimension;
         }
       }
     }
@@ -136,19 +143,19 @@ var DEMO =
     {
       var indices = geometry.getAttribute( 'index' ).array,
           index = 0,
-          width = dimension + 1,
+          width = dimension + 3,
           insideLow = dimension / 4,
           insideHigh = insideLow * 3;
-      for( var x = 0; x < dimension; ++x )
+      for( var x = 0; x <= dimension + 1; ++x )
       {
         var left = x,
             right = x + 1,
-            insideXHole = x >= insideLow && x < insideHigh;
-        for( var z = 0; z < dimension; ++z )
+            insideXHole = x > insideLow && x <= insideHigh;
+        for( var z = 0; z <= dimension + 1; ++z )
         {
           var front = z,
-              back = z + 1
-              insideZHole = z >= insideLow && z < insideHigh;
+              back = z + 1,
+              insideZHole = z > insideLow && z <= insideHigh;
               
           if( hasHole && insideXHole && insideZHole )
             continue;
@@ -186,37 +193,12 @@ var DEMO =
       return value !== undefined ? value : defaultValue;
     };
     
-    dimension = optionalParameter( dimension, 64 );
-    levels = optionalParameter( levels, 10 );
-    initialScale = optionalParameter( initialScale, 5 );
-  
-    var gridGeometry = this.GenerateLODGeometry( dimension );
-    var gridHoleGeometry = this.GenerateLODGeometry( dimension, true );
+    this.ms_LODDimension = optionalParameter( dimension, 64 );
+    this.ms_LODLevels = optionalParameter( levels, 10 );
+    this.ms_LODInitialScale = optionalParameter( initialScale, 5 );
     
-    var oceanShader = THREE.ShaderLib["ocean_main"];
-    var uniforms = THREE.UniformsUtils.clone(oceanShader.uniforms);
-    uniforms['u_scale'] = { type: 'f', value: 10.0 };
-    
-    var lodMaterial = new THREE.ShaderMaterial({
-      uniforms: uniforms,
-      vertexShader: oceanShader.buildVertexShader( 'lod' ),
-      fragmentShader: oceanShader.fragmentShader,
-      side: THREE.DoubleSide,
-      wireframe: true
-    });
-    
-    this.ms_LODGroup = new THREE.Object3D();
-    
-    var scale = initialScale;
-    for( var i = 0; i < levels; ++i ) {
-      
-      var geometry = ( i == 0 ? gridGeometry : gridHoleGeometry );
-      this.ms_LODGroup.add( this.GenerateLODMesh( geometry, lodMaterial, scale ) );
-      scale *= 2;
-      
-    }
-    
-    this.ms_Scene.add( this.ms_LODGroup );
+    this.ms_GridGeometry = this.GenerateLODGeometry( this.ms_LODDimension );
+    this.ms_GridHoleGeometry = this.GenerateLODGeometry( this.ms_LODDimension, true );
   
   },
 
@@ -227,24 +209,82 @@ var DEMO =
     
 		gui.add( DEMO, 'ms_Wireframe' ).name( 'Wireframe' ).onChange( function() { DEMO.ChangeWireframe(); } );
 		gui.add( DEMO, 'ms_Animate' ).name( 'Animate' ).onChange( function() { DEMO.ChangeAnimateMaterial(); } );
-		gui.add( DEMO, 'ms_Update' ).name( 'Update' );
-    gui.add( DEMO, 'ms_GeometryResolution', 8, 512 ).name( 'Resolution' ).onChange( function() { DEMO.ChangePlaneMesh(); } );
+		gui.add( DEMO, 'ms_Update' ).name( 'Update animation' );
+    gui.add( DEMO, 'ms_MeshType', [ 'Projected grid', 'LOD', 'Plane' ] ).name( 'Mesh' ).onChange( function() { DEMO.ChangeMesh(); } );
+    
+    var folderLOD = gui.addFolder('LOD');
+    folderLOD.add( DEMO, 'ms_LODDimension', 8, 512 ).name( 'Resolution' ).onChange( function() { DEMO.ChangeMesh( true ); } );
+    folderLOD.add( DEMO, 'ms_LODLevels', 1, 15 ).name( 'LOD levels' ).onChange( function() { DEMO.ChangeMesh(); } );
+    folderLOD.add( DEMO, 'ms_LODInitialScale', 1, 2000 ).name( 'Scale' ).onChange( function() { DEMO.ChangeMesh(); } );
+    
+    var folderProjected = gui.addFolder('Projected grid');
+    folderProjected.add( DEMO, 'ms_GeometryResolution', 8, 512 ).name( 'Resolution' ).onChange( function() { DEMO.ChangeMesh(); } );
+    
+    var folderBasic = gui.addFolder('Basic grid');
+    folderBasic.add( DEMO, 'ms_BasicGridResolution', 8, 1024 ).name( 'Resolution' ).onChange( function() { DEMO.ChangeMesh(); } );
+    folderBasic.add( DEMO, 'ms_BasicGridSize', 1000, 100000 ).name( 'Size' ).onChange( function() { DEMO.ChangeMesh(); } );
 
 	},
   
   ChangeWireframe : function ChangeWireframe() {
   
-    this.ms_Ocean.oceanMesh.material.wireframe = this.ms_Wireframe;
+    if ( this.ms_PlaneGroup !== null ) {
+      for ( var i in this.ms_PlaneGroup.children ) {
+      
+        this.ms_PlaneGroup.children[i].material.wireframe = this.ms_Wireframe;
+        
+      }
+    }
   
   },
   
   ChangeAnimateMaterial : function ChangeAnimateMaterial() {
   
-    this.ms_Ocean.oceanMesh.material.uniforms.u_animate.value = this.ms_Animate;
+    if ( this.ms_PlaneGroup !== null ) {
+      for ( var i in this.ms_PlaneGroup.children ) {
+      
+        this.ms_PlaneGroup.children[i].material.uniforms.u_animate.value = this.ms_Animate;
+        
+      }
+    }
   
   },
   
-  ChangePlaneMesh : function ChangePlaneMesh() {
+  ChangeMesh : function ChangeMesh( updateAll ) {
+  
+    if ( this.ms_PlaneGroup !== null ) {
+    
+      this.ms_PlaneGroup.parent.remove( this.ms_PlaneGroup );
+      this.ms_PlaneGroup = null;
+      
+    }
+    
+    function optionalParameter(value, defaultValue) {
+      return value !== undefined ? value : defaultValue;
+    };
+    
+    updateAll = optionalParameter( updateAll, false );
+  
+    switch( this.ms_MeshType ) {
+      case 'LOD':
+        if ( updateAll ) {
+          this.InitLOD( this.ms_LODDimension, this.ms_Levels, this.ms_InitialScale );
+        }
+        this.LoadLOD();
+        break;
+        
+      case 'Plane':
+        this.LoadBasicGrid();
+        break;
+        
+      default:
+        this.LoadProjectedMesh();
+        break;
+    }
+  
+  },
+  
+  LoadProjectedMesh : function LoadProjectedMesh() {
   
     var resolution = Math.round( this.ms_GeometryResolution );
     if ( resolution >= 1 && resolution !== this.ms_LastGeometryResolution ) {
@@ -253,10 +293,72 @@ var DEMO =
       var geometry = new THREE.PlaneBufferGeometry( 1, 1, resolution, resolution );
       this.ms_Camera.remove( this.ms_Ocean.oceanMesh );
       this.ms_Ocean.oceanMesh.geometry = geometry;
-      this.ms_Camera.add( this.ms_Ocean.oceanMesh );
       
     }
     
+    this.ms_PlaneGroup = new THREE.Object3D();
+    this.ms_PlaneGroup.add( this.ms_Ocean.oceanMesh );
+    this.ms_Camera.add( this.ms_PlaneGroup );
+    
+    this.ChangeWireframe();
+    this.ChangeAnimateMaterial();
+    
+  },
+  
+  LoadLOD : function LoadLOD() {
+    
+    this.ms_PlaneGroup = new THREE.Object3D();
+    
+    var oceanShader = THREE.ShaderLib["ocean_main"];
+    var uniforms = THREE.UniformsUtils.clone(oceanShader.uniforms);
+    uniforms['u_scale'] = { type: 'f', value: 1.0 };
+    uniforms['u_resolution'] = { type: 'i', value: this.ms_LODDimension };
+    
+    var lodMaterial = new THREE.ShaderMaterial({
+      uniforms: uniforms,
+      vertexShader: oceanShader.buildVertexShader( 'lod' ),
+      fragmentShader: oceanShader.fragmentShader,
+      side: THREE.DoubleSide,
+      wireframe: this.ms_Wireframe
+    });
+    
+    var scale = this.ms_LODInitialScale;
+    for ( var i = 0; i < this.ms_LODLevels; ++i ) {
+      
+      var geometry = ( i == 0 ? this.ms_GridGeometry : this.ms_GridHoleGeometry );
+      this.ms_PlaneGroup.add( this.GenerateLODMesh( geometry, lodMaterial, scale ) );
+      scale *= 2;
+      
+    }
+    
+    this.ms_Scene.add( this.ms_PlaneGroup );
+    
+    this.ChangeAnimateMaterial();
+    
+  },
+  
+  LoadBasicGrid : function LoadBasicGrid() {
+  
+    var geometry = this.GenerateLODGeometry( this.ms_BasicGridResolution );
+    var oceanShader = THREE.ShaderLib["ocean_main"];
+    
+    var material = new THREE.ShaderMaterial({
+      uniforms: THREE.UniformsUtils.clone(oceanShader.uniforms),
+      vertexShader: oceanShader.buildVertexShader( 'default' ),
+      fragmentShader: oceanShader.fragmentShader,
+      side: THREE.DoubleSide,
+      wireframe: this.ms_Wireframe
+    });
+    
+    var mesh = new THREE.Mesh( geometry, material );
+    mesh.scale.set( this.ms_BasicGridSize, this.ms_BasicGridSize, this.ms_BasicGridSize );
+    
+    this.ms_PlaneGroup = new THREE.Object3D();
+    this.ms_PlaneGroup.add( mesh );
+    this.ms_Scene.add( this.ms_PlaneGroup );
+    
+    this.ChangeAnimateMaterial();
+  
   },
 
 	Display : function () {
@@ -266,12 +368,18 @@ var DEMO =
 	},
 
 	Update : function () {
-
-    if( this.ms_Update ) {
-      this.ms_Ocean.oceanMesh.material.uniforms.u_time.value += this.ms_Clock.getDelta();
-    }
     
-    //this.ms_Camera.position.setX( this.ms_Camera.position.x + 1.0 );
+    var delta = this.ms_Clock.getDelta();
+
+    if ( this.ms_Update ) {
+      if ( this.ms_PlaneGroup !== null ) {
+        for ( var i in this.ms_PlaneGroup.children ) {
+        
+          this.ms_PlaneGroup.children[i].material.uniforms.u_time.value += delta;
+          
+        }
+      }
+    }
     
 		this.ms_Controls.update();
 		this.Display();
