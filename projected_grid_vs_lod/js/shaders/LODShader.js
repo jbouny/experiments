@@ -77,8 +77,8 @@ THREE.ShaderChunk["lod_pars_vertex"] = [
     ' }',
     
       // Apply the morphing
-    '   worldPosition.x += morphFactorX * gridToWorld * ( position.x > 0.0 ? 1.0 : -1.0 );',
-    '   worldPosition.y += morphFactorY * gridToWorld * ( position.z > 0.0 ? 1.0 : -1.0 );',
+    '   worldPosition.x += morphFactorX * gridToWorld;',
+    '   worldPosition.y += morphFactorY * gridToWorld ;',
     ' ',
     ' ',
     
