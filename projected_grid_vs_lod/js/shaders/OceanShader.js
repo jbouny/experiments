@@ -49,7 +49,6 @@
   
 	fragmentShader: [
 		'uniform bool u_animate;',
-		'uniform float u_time;',
     
 		'const float amplitude = 50.0;',
 		
