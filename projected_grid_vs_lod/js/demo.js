@@ -108,6 +108,12 @@ var DEMO =
       //console.warn( "DEMO.GenerateLODGeometry dimension should be positive or pair" );
       dimension++;
     }
+    var pow = 0;
+    while( ( dimension *= 0.5 ) >= 1.0 ) {
+      pow++;
+    }
+    dimension = Math.pow( 2, pow );
+    this.ms_LODDimension = dimension;
     
     var geometry = new THREE.BufferGeometry();
     var halfSize = Math.round( dimension * 0.5 );
@@ -214,8 +220,8 @@ var DEMO =
     gui.add( DEMO, 'ms_MeshType', [ 'Projected grid', 'LOD', 'Plane' ] ).name( 'Mesh' ).onChange( function() { DEMO.ChangeMesh(); } );
     
     var folderLOD = gui.addFolder('LOD');
-    folderLOD.add( DEMO, 'ms_LODDimension', 8, 512 ).name( 'Resolution' ).onChange( function() { DEMO.ChangeMesh( true ); } );
-    folderLOD.add( DEMO, 'ms_LODLevels', 1, 15 ).name( 'LOD levels' ).onChange( function() { DEMO.ChangeMesh(); } );
+    folderLOD.add( DEMO, 'ms_LODDimension', 8, 512 ).name( 'Resolution' ).listen().onChange( function() { DEMO.ChangeMesh( true ); } );
+    folderLOD.add( DEMO, 'ms_LODLevels', 1, 15 ).name( 'LOD levels' ).listen().onChange( function() { DEMO.ChangeMesh(); } );
     folderLOD.add( DEMO, 'ms_LODInitialScale', 1, 2000 ).name( 'Scale' ).onChange( function() { DEMO.ChangeMesh(); } );
     
     var folderProjected = gui.addFolder('Projected grid');
@@ -332,6 +338,7 @@ var DEMO =
       scale *= 2;
       
     }
+    this.ms_LODLevels = Math.floor( this.ms_LODLevels );
     
     this.ms_Scene.add( this.ms_PlaneGroup );
     
