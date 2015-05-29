@@ -177,10 +177,11 @@ var DEMO =
   
   },
   
-  GenerateLODMesh : function GenerateLODMesh( geometry, material, scale ) {
+  GenerateLODMesh : function GenerateLODMesh( geometry, material, scale, level ) {
     
     var lodMaterial = material.clone();
     lodMaterial.uniforms.u_scale.value = scale;
+    lodMaterial.uniforms.u_level.value = level;
     var mesh = new THREE.Mesh( geometry, lodMaterial );
     
     return mesh;
@@ -313,6 +314,7 @@ var DEMO =
     var uniforms = THREE.UniformsUtils.clone(oceanShader.uniforms);
     uniforms['u_scale'] = { type: 'f', value: 1.0 };
     uniforms['u_resolution'] = { type: 'i', value: this.ms_LODDimension };
+    uniforms['u_level'] = { type: 'i', value: 1 };
     
     var lodMaterial = new THREE.ShaderMaterial({
       uniforms: uniforms,
@@ -326,7 +328,7 @@ var DEMO =
     for ( var i = 0; i < this.ms_LODLevels; ++i ) {
       
       var geometry = ( i == 0 ? this.ms_GridGeometry : this.ms_GridHoleGeometry );
-      this.ms_PlaneGroup.add( this.GenerateLODMesh( geometry, lodMaterial, scale ) );
+      this.ms_PlaneGroup.add( this.GenerateLODMesh( geometry, lodMaterial, scale, i ) );
       scale *= 2;
       
     }
