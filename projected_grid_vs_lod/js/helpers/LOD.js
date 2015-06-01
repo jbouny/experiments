@@ -68,7 +68,7 @@ THREE.LODPlane.prototype.generate = function generate( parameters ) {
   
   this.controlLODParameters( parameters, true );
 
-  console.log( "LOD with params: " + this.lodResolution + " " + this.lodLevels + " " + this.lodScale );
+  //console.log( "LOD with params: " + this.lodResolution + " " + this.lodLevels + " " + this.lodScale );
   
   // Generate geometries
   if ( previousLodResolution !== this.lodResolution ) {

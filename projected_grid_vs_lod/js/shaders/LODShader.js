@@ -8,24 +8,14 @@ THREE.ShaderChunk["lod_pars_vertex"] = [
 		'uniform int u_resolution;',
 		'uniform int u_level;',
     
-    'vec3 getCameraPos()',
-    '{',
-      // Extract the 3x3 rotation matrix from the 4x4 view matrix, then compute the camera position
-      // Xc = R * Xw + t
-      // c = - R.t() * t <=> c = - t.t() * R
-    ' return - viewMatrix[3].xyz * mat3( ',
-    '    viewMatrix[0].xyz,',
-    '    viewMatrix[1].xyz,',
-    '    viewMatrix[2].xyz',
-    '  );',
-    '}',
-    
     'vec4 computePosition( vec4 position )',
     '{',
     ' float resolution = float( u_resolution );',
     
-      // Extract the camera position
-    ' vec3 cameraPosition = getCameraPos();',
+      // Extract the 3x3 rotation matrix and the translation vector from the 4x4 view matrix, then compute the camera position
+      // Xc = R * Xw + t
+      // c = - R.t() * t <=> c = - t.t() * R
+    ' vec3 cameraPosition = - viewMatrix[3].xyz * mat3( viewMatrix );',
     
       // Discretise the space and made the grid following the camera
     ' float cameraHeightLog = log2( abs( cameraPosition.y ) );',
@@ -33,7 +23,7 @@ THREE.ShaderChunk["lod_pars_vertex"] = [
     ' vec3 cameraScaledPosition = cameraPosition / scale;',
     ' vec2 gridPosition = position.xz + floor( cameraScaledPosition.xz * resolution + 0.5 ) / resolution;',
     
-      // Check if it is need to apply the morphing (on 1 square on 2)
+      // Check if it is needed to apply the morphing (on 1 square on 2)
     ' vec2 nextLevelMantissa = gridPosition * resolution * 0.5;',
     ' nextLevelMantissa -= floor( nextLevelMantissa );',
     
