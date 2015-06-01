@@ -93,6 +93,7 @@ THREE.LODPlane.prototype.generateLevels = function generateLevels() {
   };
   
   // Generate levels
+  this.lodMaterial.uniforms.u_resolution.value = this.lodResolution;
   var currentScale = this.lodScale;
   for ( var i = 0; i < this.lodLevels; ++i ) {
     

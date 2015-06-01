@@ -11,6 +11,7 @@ var DEMO =
 	ms_Ocean : null,
   ms_PlaneGroup : null,
   ms_ProjectedGrid : null,
+  ms_GlobalTime : 0,
 
 	Initialize : function () {
 
@@ -275,13 +276,14 @@ var DEMO =
 	},
 
 	Update : function () {
-    
-    var delta = this.ms_Clock.getDelta();
+  
+  
+    this.ms_GlobalTime += this.ms_Clock.getDelta();
 
     if ( this.ms_Update ) {
       this.ApplyOnGroupElements( function( element ) {
       
-        element.material.uniforms.u_time.value += delta;
+        element.material.uniforms.u_time.value = DEMO.ms_GlobalTime;
         
       } );
     }
