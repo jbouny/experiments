@@ -8,21 +8,16 @@ THREE.ShaderChunk["lod_pars_vertex"] = [
 		'uniform int u_resolution;',
 		'uniform int u_level;',
     
-    'mat3 getRotation()',
+    'vec3 getCameraPos()',
     '{',
-      // Extract the 3x3 rotation matrix from the 4x4 view matrix
-    '  return mat3( ',
+      // Extract the 3x3 rotation matrix from the 4x4 view matrix, then compute the camera position
+      // Xc = R * Xw + t
+      // c = - R.t() * t <=> c = - t.t() * R
+    ' return - viewMatrix[3].xyz * mat3( ',
     '    viewMatrix[0].xyz,',
     '    viewMatrix[1].xyz,',
     '    viewMatrix[2].xyz',
     '  );',
-    '}',
-    
-    'vec3 getCameraPos( in mat3 rotation )',
-    '{',
-      // Xc = R * Xw + t
-      // c = - R.t() * t <=> c = - t.t() * R
-    ' return - viewMatrix[3].xyz * rotation;',
     '}',
     
     'vec4 computePosition( vec4 position )',
@@ -30,8 +25,7 @@ THREE.ShaderChunk["lod_pars_vertex"] = [
     ' float resolution = float( u_resolution );',
     
       // Extract the camera position
-    ' mat3 cameraRotation = getRotation();',
-    ' vec3 cameraPosition = getCameraPos( cameraRotation );',
+    ' vec3 cameraPosition = getCameraPos();',
     
       // Discretise the space and made the grid following the camera
     ' float cameraHeightLog = log2( abs( cameraPosition.y ) );',
@@ -51,12 +45,12 @@ THREE.ShaderChunk["lod_pars_vertex"] = [
       // Compute the composition of morphing factors
     ' vec2 morphFactor = vec2( 0.0 );',
     ' if( nextLevelMantissa.x > 0.1 || nextLevelMantissa.y > 0.1 ) {',
-      ' float morphing = heightMorphFactor * parentLODMorphFactor;',
-      // If first LOD, apply the height morphing factor everywhere
-      ' if( u_level == 0 ) {',
-      '   morphing = max( heightMorphFactor, parentLODMorphFactor );',
-      ' }',
-      ' morphFactor += morphing * min( vec2( 1.0 ), floor( nextLevelMantissa * 10.0 ) );',
+    '   float morphing = max( parentLODMorphFactor, heightMorphFactor * parentLODMorphFactor );',
+        // If first LOD, apply the height morphing factor everywhere
+    '   if( u_level == 0 ) {',
+    '     morphing = max( heightMorphFactor, parentLODMorphFactor );',
+    '   }',
+    '   morphFactor += morphing * min( vec2( 1.0 ), floor( nextLevelMantissa * 10.0 ) );',
     ' }',
     
       // Apply the morphing
