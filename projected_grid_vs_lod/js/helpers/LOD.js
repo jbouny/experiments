@@ -158,35 +158,32 @@ THREE.LODPlane.prototype.generateLODGeometry = function generateLODGeometry( res
   
   var nbPoints = ( resolution + 3 ) * ( resolution + 3 );
   var nbTriangles = ( resolution + 2 ) * ( resolution + 2 ) * 2 ;
-  geometry.addAttribute( 'index', new THREE.BufferAttribute(new Uint32Array( nbTriangles * 3 ), 1) );
-  geometry.addAttribute( 'position', new THREE.BufferAttribute(new Float32Array( nbPoints * 3 ), 3) );
-  geometry.addAttribute( 'normals', new THREE.BufferAttribute(new Float32Array( nbPoints * 3 ), 3) );
   
-  // Generate 3d vertices and normals
+  var positions = new Float32Array( nbPoints * 3 );
+	var indices = new ( ( positions.length / 3 ) > 65535 ? Uint32Array : Uint16Array )( nbTriangles * 3 );
+  geometry.addAttribute( 'index', new THREE.BufferAttribute( indices, 1 ) );
+  geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
+  
+  // Generate 3d vertices
   {
-    var positions = geometry.getAttribute( 'position' ).array;
-    var normals = geometry.getAttribute( 'normals' ).array;
     var index = 0;
     
     for( var x = -halfSize - 1; x <= halfSize + 1; ++x )
     {
       for( var z = -halfSize - 1; z <= halfSize + 1; ++z )
-      {
-        normals[index] = 0;
-        normals[index + 1] = 1;
-        normals[index + 2] = 0;
-      
-        positions[index++] = x / resolution;
-        positions[index++] = 0;
-        positions[index++] = z / resolution;
+      {      
+        positions[index    ] = x / resolution;
+        positions[index + 1] = 0;
+        positions[index + 2] = z / resolution;
+        
+        index += 3;
       }
     }
   }
   
   // Generate triangles with vertices indices
   {
-    var indices = geometry.getAttribute( 'index' ).array,
-        index = 0,
+    var index = 0,
         width = resolution + 3,
         insideLow = resolution / 4,
         insideHigh = insideLow * 3;
@@ -203,16 +200,23 @@ THREE.LODPlane.prototype.generateLODGeometry = function generateLODGeometry( res
             
         if( isOutside && insideXHole && insideZHole )
           continue;
+          
+        var a = width * left + back,
+            b = width * right + back,
+            c = width * right + front,
+            d = width * left + front
         
         // First triangle
-        indices[index++] = width * left + back;
-        indices[index++] = width * right + back;
-        indices[index++] = width * left + front;
+        indices[index    ] = a;
+        indices[index + 1] = b;
+        indices[index + 2] = d;
         
         // Second triangle
-        indices[index++] = width * left + front;
-        indices[index++] = width * right + back
-        indices[index++] = width * right + front;
+        indices[index + 3] = d;
+        indices[index + 4] = b
+        indices[index + 5] = c;
+        
+        index += 6;
       }
     }
   }

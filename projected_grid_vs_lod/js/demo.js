@@ -41,6 +41,7 @@ var DEMO =
     this.ms_MeshType = "LOD";
     this.ms_BasicGridResolution = 256;
     this.ms_BasicGridSize = 10000;
+    this.InitLOD( 128, 8, 500 );
 
 		this.InitializeScene();
 
@@ -80,7 +81,6 @@ var DEMO =
 		} );
     
     // Add custom geometry
-    this.InitLOD( 128, 8, 500 );
     this.ChangeMesh();
     
     this.ChangeWireframe();

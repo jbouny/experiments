@@ -7,7 +7,6 @@
   },
   
 	buildVertexShader: function( shaderChunk ) { return [
-		'precision highp float;',
 		
 		'varying vec3 vWorldPosition;',
     
