@@ -32,14 +32,8 @@ var DEMO =
 
 		// Initialize Orbit control
 		this.ms_Controls = new THREE.OrbitControls( this.ms_Camera, this.ms_Renderer.domElement );
-		this.ms_Controls.userPan = false;
 		this.ms_Controls.target.set( 0, 0, 0 );
-		this.ms_Controls.noKeys = true;
-		this.ms_Controls.userPanSpeed = 0;
-		this.ms_Controls.minDistance = 0;
 		this.ms_Controls.maxDistance = 200000.0;
-		this.ms_Controls.minPolarAngle = 0;
-		this.ms_Controls.maxPolarAngle = Math.PI * 0.75;
     
     this.ms_Animate = true;
     this.ms_Update = true;
@@ -93,119 +87,13 @@ var DEMO =
     this.ChangeAnimateMaterial();
 	},
   
-  GenerateLODGeometry : function GenerateLODGeometry( dimension, hasHole ) {
+  InitLOD : function InitLOD( resolution, levels, scale ) {
   
-    function optionalParameter(value, defaultValue) {
-      return value !== undefined ? value : defaultValue;
-    };
-    
-    dimension = optionalParameter( dimension, 64 );
-    hasHole = optionalParameter( hasHole, false );
-  
-    // Guarantee dimension expectations
-    dimension = Math.floor( dimension );
-    if( dimension % 2 == 1 || dimension < 1 ) {
-      //console.warn( "DEMO.GenerateLODGeometry dimension should be positive or pair" );
-      dimension++;
-    }
-    var pow = 0;
-    while( ( dimension *= 0.5 ) >= 1.0 ) {
-      pow++;
-    }
-    dimension = Math.pow( 2, pow );
-    this.ms_LODDimension = dimension;
-    
-    var geometry = new THREE.BufferGeometry();
-    var halfSize = Math.round( dimension * 0.5 );
-		
-		var nbPoints = ( dimension + 3 ) * ( dimension + 3 );
-		var nbTriangles = ( dimension + 2 ) * ( dimension + 2 ) * 2 ;
-		geometry.addAttribute( 'index', new THREE.BufferAttribute(new Uint32Array( nbTriangles * 3 ), 1) );
-		geometry.addAttribute( 'position', new THREE.BufferAttribute(new Float32Array( nbPoints * 3 ), 3) );
-		geometry.addAttribute( 'normals', new THREE.BufferAttribute(new Float32Array( nbPoints * 3 ), 3) );
-    
-    // Generate 3d vertices and normals
-    {
-      var positions = geometry.getAttribute( 'position' ).array;
-      var normals = geometry.getAttribute( 'normals' ).array;
-      var index = 0;
-      
-      for( var x = -halfSize - 1; x <= halfSize + 1; ++x )
-      {
-        for( var z = -halfSize - 1; z <= halfSize + 1; ++z )
-        {
-          normals[index] = 0;
-          normals[index + 1] = 1;
-          normals[index + 2] = 0;
-        
-          positions[index++] = x / dimension;
-          positions[index++] = 0;
-          positions[index++] = z / dimension;
-        }
-      }
-    }
-		
-    // Generate triangles with vertices indices
-    {
-      var indices = geometry.getAttribute( 'index' ).array,
-          index = 0,
-          width = dimension + 3,
-          insideLow = dimension / 4,
-          insideHigh = insideLow * 3;
-      for( var x = 0; x <= dimension + 1; ++x )
-      {
-        var left = x,
-            right = x + 1,
-            insideXHole = x > insideLow && x <= insideHigh;
-        for( var z = 0; z <= dimension + 1; ++z )
-        {
-          var front = z,
-              back = z + 1,
-              insideZHole = z > insideLow && z <= insideHigh;
-              
-          if( hasHole && insideXHole && insideZHole )
-            continue;
-          
-          // First triangle
-          indices[index++] = width * left + back;
-          indices[index++] = width * right + back;
-          indices[index++] = width * left + front;
-          
-          // Second triangle
-          indices[index++] = width * left + front;
-          indices[index++] = width * right + back
-          indices[index++] = width * right + front;
-        }
-      }
-    }
-    
-    return geometry;
-  
-  },
-  
-  GenerateLODMesh : function GenerateLODMesh( geometry, material, scale, level ) {
-    
-    var lodMaterial = material.clone();
-    lodMaterial.uniforms.u_scale.value = scale;
-    lodMaterial.uniforms.u_level.value = level;
-    var mesh = new THREE.Mesh( geometry, lodMaterial );
-    
-    return mesh;
-    
-  },
-  
-  InitLOD : function InitLOD( dimension, levels, initialScale ) {
-  
-    function optionalParameter(value, defaultValue) {
-      return value !== undefined ? value : defaultValue;
-    };
-    
-    this.ms_LODDimension = optionalParameter( dimension, 64 );
-    this.ms_LODLevels = optionalParameter( levels, 10 );
-    this.ms_LODInitialScale = optionalParameter( initialScale, 5 );
-    
-    this.ms_GridGeometry = this.GenerateLODGeometry( this.ms_LODDimension );
-    this.ms_GridHoleGeometry = this.GenerateLODGeometry( this.ms_LODDimension, true );
+    this.ms_LOD = new THREE.LODPlane( {
+      resolution: resolution,
+      levels: levels,
+      scale: scale
+    } );
   
   },
 
@@ -220,9 +108,9 @@ var DEMO =
     gui.add( DEMO, 'ms_MeshType', [ 'Projected grid', 'LOD', 'Plane' ] ).name( 'Mesh' ).onChange( function() { DEMO.ChangeMesh(); } );
     
     var folderLOD = gui.addFolder('LOD');
-    folderLOD.add( DEMO, 'ms_LODDimension', 8, 512 ).name( 'Resolution' ).listen().onChange( function() { DEMO.ChangeMesh( true ); } );
-    folderLOD.add( DEMO, 'ms_LODLevels', 1, 15 ).name( 'LOD levels' ).listen().onChange( function() { DEMO.ChangeMesh(); } );
-    folderLOD.add( DEMO, 'ms_LODInitialScale', 1, 2000 ).name( 'Scale' ).onChange( function() { DEMO.ChangeMesh(); } );
+    folderLOD.add( this.ms_LOD, 'lodResolution', 8, 512 ).name( 'Resolution' ).listen().onChange( function() { DEMO.ChangeMesh(); } );
+    folderLOD.add( this.ms_LOD, 'lodLevels', 1, 15 ).name( 'LOD levels' ).listen().onChange( function() { DEMO.ChangeMesh(); } );
+    folderLOD.add( this.ms_LOD, 'lodScale', 1, 2000 ).name( 'Scale' ).onChange( function() { DEMO.ms_LOD.setLODScale( DEMO.ms_LOD.lodScale ); } );
     
     var folderProjected = gui.addFolder('Projected grid');
     folderProjected.add( DEMO, 'ms_GeometryResolution', 8, 1024 ).name( 'Resolution' ).onChange( function() { DEMO.ChangeMesh(); } );
@@ -233,31 +121,37 @@ var DEMO =
 
 	},
   
-  ChangeWireframe : function ChangeWireframe() {
+  ApplyOnGroupElements : function ApplyOnGroupElements( expression ) {
   
     if ( this.ms_PlaneGroup !== null ) {
       for ( var i in this.ms_PlaneGroup.children ) {
       
-        this.ms_PlaneGroup.children[i].material.wireframe = this.ms_Wireframe;
+        expression( this.ms_PlaneGroup.children[i] );
         
       }
     }
+  
+  },
+  
+  ChangeWireframe : function ChangeWireframe() {
+  
+    var wireframe = this.ms_Wireframe;
+    this.ApplyOnGroupElements( function( element ) {
+      element.material.wireframe = wireframe;
+    } );
   
   },
   
   ChangeAnimateMaterial : function ChangeAnimateMaterial() {
   
-    if ( this.ms_PlaneGroup !== null ) {
-      for ( var i in this.ms_PlaneGroup.children ) {
-      
-        this.ms_PlaneGroup.children[i].material.uniforms.u_animate.value = this.ms_Animate;
-        
-      }
-    }
+    var animate = this.ms_Animate;
+    this.ApplyOnGroupElements( function( element ) {
+      element.material.uniforms.u_animate.value = animate;
+    } );
   
   },
   
-  ChangeMesh : function ChangeMesh( updateAll ) {
+  ChangeMesh : function ChangeMesh() {
   
     if ( this.ms_PlaneGroup !== null ) {
     
@@ -269,14 +163,9 @@ var DEMO =
     function optionalParameter(value, defaultValue) {
       return value !== undefined ? value : defaultValue;
     };
-    
-    updateAll = optionalParameter( updateAll, false );
   
     switch( this.ms_MeshType ) {
       case 'LOD':
-        if ( updateAll ) {
-          this.InitLOD( this.ms_LODDimension, this.ms_LODLevels, this.ms_LODInitialScale );
-        }
         this.LoadLOD();
         break;
         
@@ -314,12 +203,10 @@ var DEMO =
   
   LoadLOD : function LoadLOD() {
     
-    this.ms_PlaneGroup = new THREE.Object3D();
-    
     var oceanShader = THREE.ShaderLib["ocean_main"];
-    var uniforms = THREE.UniformsUtils.clone(oceanShader.uniforms);
+    var uniforms = THREE.UniformsUtils.clone( oceanShader.uniforms );
     uniforms['u_scale'] = { type: 'f', value: 1.0 };
-    uniforms['u_resolution'] = { type: 'i', value: this.ms_LODDimension };
+    uniforms['u_resolution'] = { type: 'i', value: this.ms_LOD.lodResolution };
     uniforms['u_level'] = { type: 'i', value: 1 };
     
     var lodMaterial = new THREE.ShaderMaterial({
@@ -330,17 +217,13 @@ var DEMO =
       wireframe: this.ms_Wireframe
     });
     
-    var scale = this.ms_LODInitialScale;
-    for ( var i = 0; i < this.ms_LODLevels; ++i ) {
-      
-      var geometry = ( i == 0 ? this.ms_GridGeometry : this.ms_GridHoleGeometry );
-      this.ms_PlaneGroup.add( this.GenerateLODMesh( geometry, lodMaterial, scale, i ) );
-      scale *= 2;
-      
-    }
-    this.ms_LODLevels = Math.floor( this.ms_LODLevels );
+    this.ms_LOD.generate( {
+        material: lodMaterial
+    } );
     
-    this.ms_Scene.add( this.ms_PlaneGroup );
+    this.ms_PlaneGroup = this.ms_LOD;
+    
+    this.ms_Scene.add( this.ms_LOD );
     
     this.ChangeAnimateMaterial();
     
@@ -348,7 +231,7 @@ var DEMO =
   
   LoadBasicGrid : function LoadBasicGrid() {
   
-    var geometry = this.GenerateLODGeometry( this.ms_BasicGridResolution );
+    var geometry = this.ms_LOD.generateLODGeometry( this.ms_BasicGridResolution );
     var oceanShader = THREE.ShaderLib["ocean_main"];
     
     var material = new THREE.ShaderMaterial({
@@ -381,13 +264,11 @@ var DEMO =
     var delta = this.ms_Clock.getDelta();
 
     if ( this.ms_Update ) {
-      if ( this.ms_PlaneGroup !== null ) {
-        for ( var i in this.ms_PlaneGroup.children ) {
+      this.ApplyOnGroupElements( function( element ) {
+      
+        element.material.uniforms.u_time.value += delta;
         
-          this.ms_PlaneGroup.children[i].material.uniforms.u_time.value += delta;
-          
-        }
-      }
+      } );
     }
     
 		this.ms_Controls.update();
