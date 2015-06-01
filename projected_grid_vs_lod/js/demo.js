@@ -35,17 +35,25 @@ var DEMO =
 		this.ms_Controls.target.set( 0, 0, 0 );
 		this.ms_Controls.maxDistance = 200000.0;
     
+    // General parameters
     this.ms_Animate = true;
     this.ms_Update = true;
     this.ms_Wireframe = false;
     this.ms_MeshType = "LOD";
+    
+    // LOD parameters
+    this.InitLOD( 128, 8, 500 );
+    
+    // Basic grid parameters
     this.ms_BasicGridResolution = 256;
     this.ms_BasicGridSize = 10000;
-    this.InitLOD( 128, 8, 500 );
-
-		this.InitializeScene();
+    
+    // Projected grid parameter
+		this.ms_GeometryResolution = 128;
 
 		this.InitGui();
+
+		this.InitializeScene();
     
 	},
 
@@ -74,7 +82,6 @@ var DEMO =
     }
 
 		// Initialize Ocean
-		this.ms_GeometryResolution = 128;
 		this.ms_Ocean = new THREE.Ocean( this.ms_Renderer, this.ms_Camera, this.ms_Scene,
 		{
 			GEOMETRY_RESOLUTION: this.ms_GeometryResolution
@@ -118,7 +125,9 @@ var DEMO =
     var folderBasic = gui.addFolder('Basic grid');
     folderBasic.add( DEMO, 'ms_BasicGridResolution', 8, 1024 ).name( 'Resolution' ).onChange( function() { DEMO.ChangeMesh(); } );
     folderBasic.add( DEMO, 'ms_BasicGridSize', 1000, 100000 ).name( 'Size' ).onChange( function() { DEMO.ChangeMesh(); } );
-
+    
+    this.ms_TrianglesLabel = gui.add( { tmp: function() {} }, 'tmp' );
+		this.ms_TrianglesLabel.name( 'Nb triangles' );
 	},
   
   ApplyOnGroupElements : function ApplyOnGroupElements( expression ) {
@@ -163,21 +172,27 @@ var DEMO =
     function optionalParameter(value, defaultValue) {
       return value !== undefined ? value : defaultValue;
     };
+    
+    var nbTriangles = 0;
   
     switch( this.ms_MeshType ) {
       case 'LOD':
         this.LoadLOD();
+        nbTriangles = Math.pow( this.ms_LOD.lodResolution + 2, 2 ) * 2 * this.ms_LOD.lodLevels;
         break;
         
       case 'Plane':
         this.LoadBasicGrid();
+        nbTriangles = this.ms_BasicGridResolution * this.ms_BasicGridResolution;
         break;
         
       default:
         this.LoadProjectedMesh();
+        nbTriangles = this.ms_GeometryResolution * this.ms_GeometryResolution;
         break;
     }
   
+		this.ms_TrianglesLabel.name( Math.floor( nbTriangles ) + " triangles" );
   },
   
   LoadProjectedMesh : function LoadProjectedMesh() {
