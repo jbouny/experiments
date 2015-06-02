@@ -224,6 +224,9 @@ var DEMO =
     uniforms['u_scale'] = { type: 'f', value: 1.0 };
     uniforms['u_resolution'] = { type: 'i', value: this.ms_LOD.lodResolution };
     uniforms['u_level'] = { type: 'i', value: 1 };
+    uniforms['u_planeNormal'] = { type: 'v3', value: new THREE.Vector3( 0, 1, 0 ) };
+    uniforms['u_planeDistance'] = { type: 'f', value: 0 };
+    uniforms['u_usePlaneParameters'] = { type: 'i', value: 0 };
     
     var lodMaterial = new THREE.ShaderMaterial({
       uniforms: uniforms,

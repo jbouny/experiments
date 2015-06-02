@@ -38,7 +38,7 @@
         '               getHeight( vec2( 0.8, 0.99 ), heightPosition ) * 0.1;',
         /*'float x = mod( ( heightPosition.x * 0.1 + u_time * speed ), 2.0);',
         'height = 1.0 - sqrt( x * ( 2.0 - x) );',*/
-        'worldPosition.y = height * amplitude - amplitude * 0.5;',
+        'worldPosition.y += height * amplitude - amplitude * 0.5;',
       '}',
       
 			'vWorldPosition = worldPosition.xyz;',
