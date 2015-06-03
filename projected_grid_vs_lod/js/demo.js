@@ -160,12 +160,12 @@ var DEMO =
         
       case 'Plane':
         this.LoadBasicGrid();
-        nbTriangles = this.ms_BasicGridResolution * this.ms_BasicGridResolution;
+        nbTriangles = this.ms_BasicGridResolution * this.ms_BasicGridResolution * 2.0;
         break;
         
       default:
         this.LoadProjectedMesh();
-        nbTriangles = this.ms_GeometryResolution * this.ms_GeometryResolution;
+        nbTriangles = this.ms_GeometryResolution * this.ms_GeometryResolution * 2.0;
         break;
     }
   
