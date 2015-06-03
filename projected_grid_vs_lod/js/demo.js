@@ -26,7 +26,7 @@ var DEMO =
 
 		this.ms_Scene = new THREE.Scene();
 
-		this.ms_Camera = new THREE.PerspectiveCamera( 55.0, WINDOW.ms_Width / WINDOW.ms_Height, 0.5, 1000000 );
+		this.ms_Camera = new THREE.PerspectiveCamera( 55.0, WINDOW.ms_Width / WINDOW.ms_Height, 0.5, 100000000 );
 		this.ms_Camera.position.set( 500, 1100, 2200 );
 		this.ms_Camera.lookAt( new THREE.Vector3( 0, 0, 0 ) );
 		this.ms_Scene.add( this.ms_Camera );
@@ -34,7 +34,7 @@ var DEMO =
 		// Initialize Orbit control
 		this.ms_Controls = new THREE.OrbitControls( this.ms_Camera, this.ms_Renderer.domElement );
 		this.ms_Controls.target.set( 0, 0, 0 );
-		this.ms_Controls.maxDistance = 200000.0;
+		this.ms_Controls.maxDistance = 50000000.0;
     
     // General parameters
     this.ms_Animate = true;
@@ -43,7 +43,7 @@ var DEMO =
     this.ms_MeshType = "LOD";
     
     // LOD parameters
-    this.ms_LODGrid = new THREE.LODGridExample( 128, 8, 500 );
+    this.ms_LODGrid = new THREE.LODGridExample( 128, 7, 500 );
     
     // Basic grid parameters
     this.ms_BasicGridResolution = 256;
@@ -66,21 +66,8 @@ var DEMO =
 		this.ms_Scene.add( this.ms_MainDirectionalLight );
     
     // Add axis helper
-    /*var axis = new THREE.AxisHelper(1000);
+    var axis = new THREE.AxisHelper(1000);
     this.ms_Scene.add( axis );
-    
-    // Add some color boxes
-    for ( var i = -2; i <= 2; ++ i ) {
-      for ( var j = -2; j <= 2; ++ j ) {
-        for ( var k = 0-2; k <= 2; ++ k ) {
-          var geometry = new THREE.BoxGeometry( 100, 100, 100 );
-          var material = new THREE.MeshLambertMaterial( { fog: true, side: THREE.DoubleSide, color: new THREE.Color( 0.5 + i * 0.2, 0.5 + j * 0.2, 0.5 + k * 0.2 ) } );
-          var mesh = new THREE.Mesh( geometry, material );
-          mesh.position.set( i * 300, j * 300, k * 300 );
-          this.ms_Scene.add( mesh );
-        }
-      }
-    }*/
 
 		// Initialize ProjectedGridExample
 		this.ms_ProjectedGrid = new THREE.ProjectedGridExample( this.ms_Renderer, this.ms_Camera, this.ms_Scene, {
