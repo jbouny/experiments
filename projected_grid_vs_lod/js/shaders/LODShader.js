@@ -15,11 +15,11 @@ THREE.ShaderChunk["lod_pars_vertex"] = [
     'vec2 computeAncestorMorphing(int level, vec2 gridPosition, float heightMorphFactor, vec3 cameraScaledPosition, float resolution, vec2 previousMorphing )',
     '{',
       // Check if it is needed to apply the morphing (on 1 square on 2)
-    ' vec2 mantissa = gridPosition * resolution * 0.5;',
+    ' vec2 fractionnalPart = gridPosition * resolution * 0.5;',
     ' if( level > 1 ) {',
-    '   mantissa = ( mantissa + 0.5 ) / pow( 2.0, float( level - 1 ) );',
+    '   fractionnalPart = ( fractionnalPart + 0.5 ) / pow( 2.0, float( level - 1 ) );',
     ' }',
-    ' mantissa -= floor( mantissa );',
+    ' fractionnalPart -= floor( fractionnalPart );',
     
       // Compute morphing factors (based on the height and the parent LOD
     ' vec2 squareOffset = abs( cameraScaledPosition.xz - ( gridPosition + previousMorphing ) ) / float( level );',
@@ -28,13 +28,13 @@ THREE.ShaderChunk["lod_pars_vertex"] = [
     
       // Compute the composition of morphing factors
     ' vec2 morphFactor = vec2( 0.0 );',
-    ' if( mantissa.x + mantissa.y > 0.49 ) {',
+    ' if( fractionnalPart.x + fractionnalPart.y > 0.49 ) {',
     '   float morphing = parentMorphFactor;',
         // If first LOD, apply the height morphing factor everywhere
     '   if( u_level + level == 1 ) {',
     '     morphing = max( heightMorphFactor, morphing );',
     '   }',
-    '   morphFactor += morphing * floor( mantissa * 2.0 );',
+    '   morphFactor += morphing * floor( fractionnalPart * 2.0 );',
     ' }',
     ' return float( level ) * morphFactor / resolution;',
       
