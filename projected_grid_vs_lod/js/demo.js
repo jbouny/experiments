@@ -26,7 +26,7 @@ var DEMO =
 
 		this.ms_Scene = new THREE.Scene();
 
-		this.ms_Camera = new THREE.PerspectiveCamera( 55.0, WINDOW.ms_Width / WINDOW.ms_Height, 0.5, 100000000 );
+		this.ms_Camera = new THREE.PerspectiveCamera( 55.0, WINDOW.ms_Width / WINDOW.ms_Height, 0.5, 10000000 );
 		this.ms_Camera.position.set( 500, 1100, 2200 );
 		this.ms_Camera.lookAt( new THREE.Vector3( 0, 0, 0 ) );
 		this.ms_Scene.add( this.ms_Camera );
@@ -34,7 +34,7 @@ var DEMO =
 		// Initialize Orbit control
 		this.ms_Controls = new THREE.OrbitControls( this.ms_Camera, this.ms_Renderer.domElement );
 		this.ms_Controls.target.set( 0, 0, 0 );
-		this.ms_Controls.maxDistance = 50000000.0;
+		this.ms_Controls.maxDistance = 1000000.0;
     
     // General parameters
     this.ms_Animate = true;
@@ -199,7 +199,7 @@ var DEMO =
     this.ms_LODGrid.generate();
     
     this.ms_PlaneGroup = this.ms_LODGrid.lod;
-    this.ms_Scene.add( this.ms_PlaneGroup );
+    this.ms_Camera.add( this.ms_PlaneGroup );
     
     this.ChangeAnimateMaterial();
     
