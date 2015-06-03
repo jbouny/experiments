@@ -1,4 +1,4 @@
-﻿THREE.ShaderLib['ocean_main'] = {
+﻿THREE.ShaderLib['example_main'] = {
 	uniforms: {
 
     'u_animate':  { type: 'i', value: true },

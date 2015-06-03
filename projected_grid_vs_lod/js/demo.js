@@ -8,9 +8,9 @@ var DEMO =
 	ms_Camera : null,
 	ms_Scene : null,
 	ms_Controls : null,
-	ms_Ocean : null,
   ms_PlaneGroup : null,
   ms_ProjectedGrid : null,
+  ms_LODGrid : null,
   ms_GlobalTime : 0,
 
 	Initialize : function () {
@@ -43,7 +43,7 @@ var DEMO =
     this.ms_MeshType = "LOD";
     
     // LOD parameters
-    this.InitLOD( 128, 8, 500 );
+    this.ms_LODGrid = new THREE.LODGridExample( 128, 8, 500 );
     
     // Basic grid parameters
     this.ms_BasicGridResolution = 256;
@@ -66,7 +66,7 @@ var DEMO =
 		this.ms_Scene.add( this.ms_MainDirectionalLight );
     
     // Add axis helper
-    var axis = new THREE.AxisHelper(1000);
+    /*var axis = new THREE.AxisHelper(1000);
     this.ms_Scene.add( axis );
     
     // Add some color boxes
@@ -80,11 +80,10 @@ var DEMO =
           this.ms_Scene.add( mesh );
         }
       }
-    }
+    }*/
 
-		// Initialize Ocean
-		this.ms_Ocean = new THREE.Ocean( this.ms_Renderer, this.ms_Camera, this.ms_Scene,
-		{
+		// Initialize ProjectedGridExample
+		this.ms_ProjectedGrid = new THREE.ProjectedGridExample( this.ms_Renderer, this.ms_Camera, this.ms_Scene, {
 			GEOMETRY_RESOLUTION: this.ms_GeometryResolution
 		} );
     
@@ -94,16 +93,6 @@ var DEMO =
     this.ChangeWireframe();
     this.ChangeAnimateMaterial();
 	},
-  
-  InitLOD : function InitLOD( resolution, levels, scale ) {
-  
-    this.ms_LOD = new THREE.LODPlane( {
-      resolution: resolution,
-      levels: levels,
-      scale: scale
-    } );
-  
-  },
 
 	InitGui : function InitGui() {
 
@@ -116,9 +105,9 @@ var DEMO =
     gui.add( DEMO, 'ms_MeshType', [ 'Projected grid', 'LOD', 'Plane' ] ).name( 'Mesh' ).onChange( function() { DEMO.ChangeMesh(); } );
     
     var folderLOD = gui.addFolder('LOD');
-    folderLOD.add( this.ms_LOD, 'lodResolution', 8, 512 ).name( 'Resolution' ).listen().onChange( function() { DEMO.ChangeMesh(); } );
-    folderLOD.add( this.ms_LOD, 'lodLevels', 1, 15 ).name( 'LOD levels' ).listen().onChange( function() { DEMO.ChangeMesh(); } );
-    folderLOD.add( this.ms_LOD, 'lodScale', 1, 2000 ).name( 'Scale' ).onChange( function() { DEMO.ms_LOD.setLODScale( DEMO.ms_LOD.lodScale ); } );
+    folderLOD.add( this.ms_LODGrid.lod, 'lodResolution', 8, 512 ).name( 'Resolution' ).listen().onChange( function() { DEMO.ChangeMesh(); } );
+    folderLOD.add( this.ms_LODGrid.lod, 'lodLevels', 1, 15 ).name( 'LOD levels' ).listen().onChange( function() { DEMO.ChangeMesh(); } );
+    folderLOD.add( this.ms_LODGrid.lod, 'lodScale', 1, 2000 ).name( 'Scale' ).onChange( function() { DEMO.ms_LODGrid.lod.setLODScale( DEMO.ms_LODGrid.lod.lodScale ); } );
     
     var folderProjected = gui.addFolder('Projected grid');
     folderProjected.add( DEMO, 'ms_GeometryResolution', 8, 1024 ).name( 'Resolution' ).onChange( function() { DEMO.ChangeMesh(); } );
@@ -179,7 +168,7 @@ var DEMO =
     switch( this.ms_MeshType ) {
       case 'LOD':
         this.LoadLOD();
-        nbTriangles = Math.pow( this.ms_LOD.lodResolution + 2, 2 ) * 2 * this.ms_LOD.lodLevels;
+        nbTriangles = Math.pow( this.ms_LODGrid.lod.lodResolution + 2, 2 ) * 2 * this.ms_LODGrid.lod.lodLevels;
         break;
         
       case 'Plane':
@@ -203,13 +192,13 @@ var DEMO =
     
       this.ms_LastGeometryResolution = resolution;
       var geometry = new THREE.PlaneBufferGeometry( 1, 1, resolution, resolution );
-      this.ms_Camera.remove( this.ms_Ocean.oceanMesh );
-      this.ms_Ocean.oceanMesh.geometry = geometry;
+      this.ms_Camera.remove( this.ms_ProjectedGrid.oceanMesh );
+      this.ms_ProjectedGrid.oceanMesh.geometry = geometry;
       
     }
     
     this.ms_PlaneGroup = new THREE.Object3D();
-    this.ms_PlaneGroup.add( this.ms_Ocean.oceanMesh );
+    this.ms_PlaneGroup.add( this.ms_ProjectedGrid.oceanMesh );
     this.ms_Camera.add( this.ms_PlaneGroup );
     
     this.ChangeWireframe();
@@ -219,30 +208,11 @@ var DEMO =
   
   LoadLOD : function LoadLOD() {
     
-    var oceanShader = THREE.ShaderLib["ocean_main"];
-    var uniforms = THREE.UniformsUtils.clone( oceanShader.uniforms );
-    uniforms['u_scale'] = { type: 'f', value: 1.0 };
-    uniforms['u_resolution'] = { type: 'i', value: this.ms_LOD.lodResolution };
-    uniforms['u_level'] = { type: 'i', value: 1 };
-    uniforms['u_planeNormal'] = { type: 'v3', value: new THREE.Vector3( 0, 1, 0 ) };
-    uniforms['u_planeDistance'] = { type: 'f', value: 0 };
-    uniforms['u_usePlaneParameters'] = { type: 'i', value: 0 };
+    this.ms_LODGrid.material.wireframe = this.ms_Wireframe;
+    this.ms_LODGrid.generate();
     
-    var lodMaterial = new THREE.ShaderMaterial({
-      uniforms: uniforms,
-      vertexShader: oceanShader.buildVertexShader( 'lod' ),
-      fragmentShader: oceanShader.fragmentShader,
-      side: THREE.DoubleSide,
-      wireframe: this.ms_Wireframe
-    });
-    
-    this.ms_LOD.generate( {
-        material: lodMaterial
-    } );
-    
-    this.ms_PlaneGroup = this.ms_LOD;
-    
-    this.ms_Scene.add( this.ms_LOD );
+    this.ms_PlaneGroup = this.ms_LODGrid.lod;
+    this.ms_Scene.add( this.ms_PlaneGroup );
     
     this.ChangeAnimateMaterial();
     
@@ -250,13 +220,13 @@ var DEMO =
   
   LoadBasicGrid : function LoadBasicGrid() {
   
-    var geometry = this.ms_LOD.generateLODGeometry( this.ms_BasicGridResolution );
-    var oceanShader = THREE.ShaderLib["ocean_main"];
+    var geometry = this.ms_LODGrid.lod.generateLODGeometry( this.ms_BasicGridResolution );
+    var shader = THREE.ShaderLib['example_main'];
     
     var material = new THREE.ShaderMaterial({
-      uniforms: THREE.UniformsUtils.clone(oceanShader.uniforms),
-      vertexShader: oceanShader.buildVertexShader( 'default' ),
-      fragmentShader: oceanShader.fragmentShader,
+      uniforms: THREE.UniformsUtils.clone( shader.uniforms ),
+      vertexShader: shader.buildVertexShader( 'default' ),
+      fragmentShader: shader.fragmentShader,
       side: THREE.DoubleSide,
       wireframe: this.ms_Wireframe
     });
@@ -279,7 +249,6 @@ var DEMO =
 	},
 
 	Update : function () {
-  
   
     this.ms_GlobalTime += this.ms_Clock.getDelta();
 
