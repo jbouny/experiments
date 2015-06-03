@@ -7,23 +7,10 @@ THREE.ShaderChunk["lod_pars_vertex"] = [
 		'uniform float u_scale;',
 		'uniform int u_resolution;',
 		'uniform int u_level;',
-		'uniform vec3 u_planeNormal;',
-		'uniform float u_planeDistance;',
+		'uniform vec3 u_planeUp;',
+		'uniform vec3 u_planeAt;',
+		'uniform vec3 u_planePoint;',
 		'uniform bool u_usePlaneParameters;',
-    
-    // http://www.neilmendoza.com/glsl-rotation-about-an-arbitrary-axis/
-    'mat3 axisAngleToMatrix(vec3 axis, float angle)',
-    '{',
-    ' float len = length (axis);',
-    ' axis = (len == 0.0) ? vec3 (0.0, 0.0, 0.0) : axis / len;',
-    ' float s = sin(angle);',
-    ' float c = cos(angle);',
-    ' float oc = 1.0 - c;',
-    ' ',
-    ' return mat3( oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,',
-    '              oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,',
-    '              oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c );',
-    '}',
     
     'vec2 computeAncestorMorphing(int level, vec2 gridPosition, float heightMorphFactor, vec3 cameraScaledPosition, float resolution, vec2 previousMorphing )',
     '{',
@@ -61,20 +48,23 @@ THREE.ShaderChunk["lod_pars_vertex"] = [
     ' vec3 cameraPosition = - viewMatrix[3].xyz * mat3( viewMatrix );',
     
     ' float resolution = float( u_resolution );',
-    ' vec3 planeNormal = normalize( u_planeNormal );',
+    ' vec3 planeY = normalize( u_planeUp );',
     
-    // Compute the plane rotation (if needed)
+      // Compute the plane rotation (if needed)
     ' mat3 planeRotation;',
     ' if( u_usePlaneParameters ) {',
-    '   vec3 rotationAxis = cross( vec3( 0, 1.0, 0 ), planeNormal );',
-    '   float rotationAngle = acos( dot( vec3( 0, 1.0, 0 ), planeNormal ) );',
-    '   planeRotation = axisAngleToMatrix( rotationAxis, rotationAngle );',
+    '   vec3 planeZ = normalize( u_planeAt );',
+    '   vec3 planeX = normalize( cross( planeY, planeZ ) );',
+    '   planeZ = normalize( cross( planeY, planeX ) );',
+    '   planeRotation = mat3( planeX, planeY, planeZ );',
     ' }',
     
-      // Project the camera position on the grid using plane parameters
+      // Project the camera position and the scene origin on the grid using plane parameters
     ' vec3 projectedCamera = vec3( cameraPosition.x, 0.0, cameraPosition.z );',
+    ' vec3 projectedOrigin = vec3( 0 );',
     ' if( u_usePlaneParameters ) {',
-    '   projectedCamera = cameraPosition - dot( cameraPosition - ( planeNormal * u_planeDistance ), planeNormal ) * planeNormal;',
+    '   projectedCamera = cameraPosition - dot( cameraPosition - u_planePoint, planeY ) * planeY;',
+    '   projectedOrigin = - dot( - u_planePoint, planeY ) * planeY;',
     ' }',
     
       // Discretise the space and made the grid following the camera
@@ -82,7 +72,7 @@ THREE.ShaderChunk["lod_pars_vertex"] = [
     ' float scale = u_scale * pow( 2.0, floor( cameraHeightLog ) ) * 0.005;',
     ' vec3 cameraScaledPosition = projectedCamera / scale;',
     ' if( u_usePlaneParameters ) {',
-    '   cameraScaledPosition = planeRotation * cameraScaledPosition;',
+    '   cameraScaledPosition = cameraScaledPosition * planeRotation;',
     ' }',
     ' vec2 gridPosition = position.xz + floor( cameraScaledPosition.xz * resolution + 0.5 ) / resolution;',
     
@@ -101,8 +91,7 @@ THREE.ShaderChunk["lod_pars_vertex"] = [
       // Compute world coordinates (if needed)
     ' vec3 worldPosition = vec3( gridPosition.x * scale, 0, gridPosition.y * scale );',
     ' if( u_usePlaneParameters ) {',
-    '   worldPosition.y += u_planeDistance;',
-    '   worldPosition *= planeRotation;',
+    '   worldPosition = planeRotation * worldPosition + projectedOrigin;',
     ' }',
     
       // Return the final position
