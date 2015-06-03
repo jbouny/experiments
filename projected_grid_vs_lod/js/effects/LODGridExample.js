@@ -16,6 +16,7 @@
   uniforms['u_planePoint'] = { type: 'v3', value: new THREE.Vector3( 0, 0, 0 ) };
   uniforms['u_planeDistance'] = { type: 'f', value: 0 };
   uniforms['u_usePlaneParameters'] = { type: 'i', value: 0 };
+  uniforms['u_morphingLevels'] = { type: 'i', value: 0 };
   
   this.material = new THREE.ShaderMaterial( {
     uniforms: uniforms,
@@ -30,6 +31,7 @@
 THREE.LODGridExample.prototype.generate = function () {
 
   this.material.uniforms.u_resolution.value = this.lod.lodResolution;
+  this.material.uniforms.u_morphingLevels.value = this.lod.lodMorphingLevels;
     
   this.lod.generate( {
       material: this.material

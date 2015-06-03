@@ -34,6 +34,7 @@ THREE.LODPlane.prototype.controlLODParameters = function controlLODParameters( p
     this.lodLevels = optionalParameter( parameters.levels, this.lodLevels );
     this.lodScale = optionalParameter( parameters.scale, this.lodScale );
     this.lodMaterial = optionalParameter( parameters.material, this.lodMaterial );
+    this.lodMorphingLevels = optionalParameter( parameters.morphingLevels, this.lodMorphingLevels );
     
   }
   else {
@@ -42,6 +43,7 @@ THREE.LODPlane.prototype.controlLODParameters = function controlLODParameters( p
     this.lodLevels = optionalParameter( parameters.levels, 8 );
     this.lodScale = optionalParameter( parameters.scale, 1 );
     this.lodMaterial = optionalParameter( parameters.material, undefined );
+    this.lodMorphingLevels = optionalParameter( parameters.morphingLevels, 2 );
     
   }
   
@@ -56,6 +58,9 @@ THREE.LODPlane.prototype.controlLODParameters = function controlLODParameters( p
     // Resolution should be a power of two
     this.lodResolution = Math.max( 1, this.lodResolution );
     this.lodResolution = Math.pow( 2, Math.round( Math.log2( this.lodResolution ) ) );
+    
+    // Morphing levels should be an integer between [0;2]
+    this.lodMorphingLevels = Math.max( 0, Math.min( 2, Math.round( this.lodMorphingLevels ) ) );
   }
 
   this.previousLodResolution = this.lodResolution;
@@ -118,11 +123,25 @@ THREE.LODPlane.prototype.applyOnLevels = function applyOnLevels( expression ) {
 THREE.LODPlane.prototype.setLODScale = function setLODScale( lodScale ) {
   
   this.lodScale = lodScale;
-  var currentScale = lodScale;
+  this.controlLODParameters( {}, true );
+  var currentScale = this.lodScale;
   this.applyOnLevels( function ( level ) {
     
     level.material.uniforms.u_scale.value = currentScale;
     currentScale *= 2;
+    
+  } );
+  
+}
+
+THREE.LODPlane.prototype.setMorphingLevels = function setMorphingLevels( morphingLevels ) {
+  
+  this.lodMorphingLevels = morphingLevels;
+  this.controlLODParameters( {}, true );
+  morphingLevels = this.lodMorphingLevels;
+  this.applyOnLevels( function ( level ) {
+    
+    level.material.uniforms.u_morphingLevels.value = morphingLevels;
     
   } );
   

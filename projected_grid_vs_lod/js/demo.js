@@ -95,6 +95,7 @@ var DEMO =
     folderLOD.add( this.ms_LODGrid.lod, 'lodResolution', 8, 512 ).name( 'Resolution' ).listen().onChange( function() { DEMO.ChangeMesh(); } );
     folderLOD.add( this.ms_LODGrid.lod, 'lodLevels', 1, 15 ).name( 'LOD levels' ).listen().onChange( function() { DEMO.ChangeMesh(); } );
     folderLOD.add( this.ms_LODGrid.lod, 'lodScale', 1, 2000 ).name( 'Scale' ).onChange( function() { DEMO.ms_LODGrid.lod.setLODScale( DEMO.ms_LODGrid.lod.lodScale ); } );
+    folderLOD.add( this.ms_LODGrid.lod, 'lodMorphingLevels', 0, 2 ).name( 'Morphing levels' ).listen().onChange( function() { DEMO.ms_LODGrid.lod.setMorphingLevels( DEMO.ms_LODGrid.lod.lodMorphingLevels ); } );
     
     var folderProjected = gui.addFolder('Projected grid');
     folderProjected.add( DEMO, 'ms_GeometryResolution', 8, 1024 ).name( 'Resolution' ).onChange( function() { DEMO.ChangeMesh(); } );

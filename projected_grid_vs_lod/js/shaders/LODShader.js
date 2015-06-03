@@ -11,6 +11,7 @@ THREE.ShaderChunk["lod_pars_vertex"] = [
 		'uniform vec3 u_planeAt;',
 		'uniform vec3 u_planePoint;',
 		'uniform bool u_usePlaneParameters;',
+		'uniform int u_morphingLevels;',
     
     'vec2 computeAncestorMorphing(int level, vec2 gridPosition, float heightMorphFactor, vec3 cameraScaledPosition, float resolution, vec2 previousMorphing )',
     '{',
@@ -81,8 +82,10 @@ THREE.ShaderChunk["lod_pars_vertex"] = [
     
       // Compute morphing factors from LOD ancestors
     ' vec2 morphing = vec2( 0 );',
-    ' for( int i = 1; i <= 2; ++i ) {',
-    '   morphing += computeAncestorMorphing( i, gridPosition, heightMorphFactor, cameraScaledPosition, resolution, morphing );',
+    ' for( int i = 1; i <= 2; ++i ) {', // 2 is the max allowed number of iterations
+    '   if( i <= u_morphingLevels ) {',
+    '     morphing += computeAncestorMorphing( i, gridPosition, heightMorphFactor, cameraScaledPosition, resolution, morphing );',
+    '   }',
     ' }',
     
       // Apply final morphing
