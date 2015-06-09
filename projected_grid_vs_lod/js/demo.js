@@ -18,7 +18,7 @@ var DEMO =
 		this.ms_Renderer = new THREE.WebGLRenderer();
 		this.ms_Renderer.context.getExtension( 'OES_texture_float' );
 		this.ms_Renderer.context.getExtension( 'OES_texture_float_linear' );
-		this.ms_Renderer.setClearColor( 0xbbbbbb );
+		this.ms_Renderer.setClearColor( 0xdddddd );
     
     this.ms_Clock = new THREE.Clock();
 
@@ -43,7 +43,7 @@ var DEMO =
     this.ms_MeshType = "LOD";
     
     // LOD parameters
-    this.ms_LODGrid = new THREE.LODGridExample( 128, 7, 500 );
+    this.ms_LODGrid = new THREE.LODGridExample( 128, 7, 500, 2 );
     
     // Basic grid parameters
     this.ms_BasicGridResolution = 256;

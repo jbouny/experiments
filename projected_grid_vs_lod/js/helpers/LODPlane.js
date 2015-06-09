@@ -102,7 +102,7 @@ THREE.LODPlane.prototype.generateLevels = function generateLevels() {
   var currentScale = this.lodScale;
   for ( var i = 0; i < this.lodLevels; ++i ) {
     
-    var geometry = ( i == 0 ? this.gridGeometry : this.gridOutsideGeometry );
+    var geometry = ( i === 0 ? this.gridGeometry : this.gridOutsideGeometry );
     this.add( this.generateLODMesh( geometry, this.lodMaterial, currentScale, i ) );
     currentScale *= 2;
     
@@ -176,9 +176,11 @@ THREE.LODPlane.prototype.generateLODGeometry = function generateLODGeometry( res
   var geometry = new THREE.BufferGeometry();
   var halfSize = Math.round( resolution * 0.5 );
   
+  // Storage of (K+2)^2 squares
   var nbPoints = ( resolution + 3 ) * ( resolution + 3 );
   var nbTriangles = ( resolution + 2 ) * ( resolution + 2 ) * 2 ;
   
+  // Allocate arrays
   var positions = new Float32Array( nbPoints * 3 );
 	var indices = new ( ( positions.length / 3 ) > 65535 ? Uint32Array : Uint16Array )( nbTriangles * 3 );
   geometry.addAttribute( 'index', new THREE.BufferAttribute( indices, 1 ) );

@@ -1,9 +1,10 @@
-﻿THREE.LODGridExample = function ( resolution, levels, scale ) {
+﻿THREE.LODGridExample = function ( resolution, levels, scale, morphingLevels ) {
 
   this.lod = new THREE.LODPlane( {
     resolution: resolution,
     levels: levels,
-    scale: scale
+    scale: scale,
+    morphingLevels: morphingLevels
   } );
     
   var shader = THREE.ShaderLib['example_main'];
