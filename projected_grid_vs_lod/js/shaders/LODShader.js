@@ -4,14 +4,14 @@
  
 THREE.ShaderChunk["lod_pars_vertex"] = [
     
-		'uniform float u_scale;',
-		'uniform int u_resolution;',
-		'uniform int u_level;',
-		'uniform vec3 u_planeUp;',
-		'uniform vec3 u_planeAt;',
-		'uniform vec3 u_planePoint;',
-		'uniform bool u_usePlaneParameters;',
-		'uniform int u_morphingLevels;',
+    'uniform float u_scale;',
+    'uniform int u_resolution;',
+    'uniform int u_level;',
+    'uniform vec3 u_planeUp;',
+    'uniform vec3 u_planeAt;',
+    'uniform vec3 u_planePoint;',
+    'uniform bool u_usePlaneParameters;',
+    'uniform int u_morphingLevels;',
     
     'vec2 computeAncestorMorphing(int level, vec2 gridPosition, float heightMorphFactor, vec3 cameraScaledPosition, float resolution, vec2 previousMorphing )',
     '{',

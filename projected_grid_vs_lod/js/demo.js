@@ -4,37 +4,37 @@
 
 var DEMO =
 {
-	ms_Renderer : null,
-	ms_Camera : null,
-	ms_Scene : null,
-	ms_Controls : null,
+  ms_Renderer : null,
+  ms_Camera : null,
+  ms_Scene : null,
+  ms_Controls : null,
   ms_PlaneGroup : null,
   ms_ProjectedGrid : null,
   ms_LODGrid : null,
   ms_GlobalTime : 0,
 
-	Initialize : function () {
+  Initialize : function () {
 
-		this.ms_Renderer = new THREE.WebGLRenderer();
-		this.ms_Renderer.context.getExtension( 'OES_texture_float' );
-		this.ms_Renderer.context.getExtension( 'OES_texture_float_linear' );
-		this.ms_Renderer.setClearColor( 0xdddddd );
+    this.ms_Renderer = new THREE.WebGLRenderer();
+    this.ms_Renderer.context.getExtension( 'OES_texture_float' );
+    this.ms_Renderer.context.getExtension( 'OES_texture_float_linear' );
+    this.ms_Renderer.setClearColor( 0xdddddd );
     
     this.ms_Clock = new THREE.Clock();
 
-		document.body.appendChild( this.ms_Renderer.domElement );
+    document.body.appendChild( this.ms_Renderer.domElement );
 
-		this.ms_Scene = new THREE.Scene();
+    this.ms_Scene = new THREE.Scene();
 
-		this.ms_Camera = new THREE.PerspectiveCamera( 55.0, WINDOW.ms_Width / WINDOW.ms_Height, 0.5, 10000000 );
-		this.ms_Camera.position.set( 500, 1100, 2200 );
-		this.ms_Camera.lookAt( new THREE.Vector3( 0, 0, 0 ) );
-		this.ms_Scene.add( this.ms_Camera );
+    this.ms_Camera = new THREE.PerspectiveCamera( 55.0, WINDOW.ms_Width / WINDOW.ms_Height, 0.5, 10000000 );
+    this.ms_Camera.position.set( 500, 1100, 2200 );
+    this.ms_Camera.lookAt( new THREE.Vector3( 0, 0, 0 ) );
+    this.ms_Scene.add( this.ms_Camera );
 
-		// Initialize Orbit control
-		this.ms_Controls = new THREE.OrbitControls( this.ms_Camera, this.ms_Renderer.domElement );
-		this.ms_Controls.target.set( 0, 0, 0 );
-		this.ms_Controls.maxDistance = 1000000.0;
+    // Initialize Orbit control
+    this.ms_Controls = new THREE.OrbitControls( this.ms_Camera, this.ms_Renderer.domElement );
+    this.ms_Controls.target.set( 0, 0, 0 );
+    this.ms_Controls.maxDistance = 1000000.0;
     
     // General parameters
     this.ms_Animate = true;
@@ -50,45 +50,45 @@ var DEMO =
     this.ms_BasicGridSize = 10000;
     
     // Projected grid parameter
-		this.ms_GeometryResolution = 128;
+    this.ms_GeometryResolution = 128;
 
-		this.InitGui();
+    this.InitGui();
 
-		this.InitializeScene();
+    this.InitializeScene();
     
-	},
+  },
 
-	InitializeScene : function InitializeScene() {
+  InitializeScene : function InitializeScene() {
 
-		// Add light
-		this.ms_MainDirectionalLight = new THREE.DirectionalLight( 0xffffff, 1.5 );
-		this.ms_MainDirectionalLight.position.set( -0.2, 0.5, 1 );
-		this.ms_Scene.add( this.ms_MainDirectionalLight );
+    // Add light
+    this.ms_MainDirectionalLight = new THREE.DirectionalLight( 0xffffff, 1.5 );
+    this.ms_MainDirectionalLight.position.set( -0.2, 0.5, 1 );
+    this.ms_Scene.add( this.ms_MainDirectionalLight );
     
     // Add axis helper
     var axis = new THREE.AxisHelper(1000);
     this.ms_Scene.add( axis );
 
-		// Initialize ProjectedGridExample
-		this.ms_ProjectedGrid = new THREE.ProjectedGridExample( this.ms_Renderer, this.ms_Camera, this.ms_Scene, {
-			GEOMETRY_RESOLUTION: this.ms_GeometryResolution
-		} );
+    // Initialize ProjectedGridExample
+    this.ms_ProjectedGrid = new THREE.ProjectedGridExample( this.ms_Renderer, this.ms_Camera, this.ms_Scene, {
+      GEOMETRY_RESOLUTION: this.ms_GeometryResolution
+    } );
     
     // Add custom geometry
     this.ChangeMesh();
     
     this.ChangeWireframe();
     this.ChangeAnimateMaterial();
-	},
+  },
 
-	InitGui : function InitGui() {
+  InitGui : function InitGui() {
 
-		// Initialize UI
-		var gui = new dat.GUI();
+    // Initialize UI
+    var gui = new dat.GUI();
     
-		gui.add( DEMO, 'ms_Wireframe' ).name( 'Wireframe' ).onChange( function() { DEMO.ChangeWireframe(); } );
-		gui.add( DEMO, 'ms_Animate' ).name( 'Animate' ).onChange( function() { DEMO.ChangeAnimateMaterial(); } );
-		gui.add( DEMO, 'ms_Update' ).name( 'Update animation' );
+    gui.add( DEMO, 'ms_Wireframe' ).name( 'Wireframe' ).onChange( function() { DEMO.ChangeWireframe(); } );
+    gui.add( DEMO, 'ms_Animate' ).name( 'Animate' ).onChange( function() { DEMO.ChangeAnimateMaterial(); } );
+    gui.add( DEMO, 'ms_Update' ).name( 'Update animation' );
     gui.add( DEMO, 'ms_MeshType', [ 'Projected grid', 'LOD', 'Plane' ] ).name( 'Mesh' ).onChange( function() { DEMO.ChangeMesh(); } );
     
     var folderLOD = gui.addFolder('LOD');
@@ -105,8 +105,8 @@ var DEMO =
     folderBasic.add( DEMO, 'ms_BasicGridSize', 1000, 100000 ).name( 'Size' ).onChange( function() { DEMO.ChangeMesh(); } );
     
     this.ms_TrianglesLabel = gui.add( { tmp: function() {} }, 'tmp' );
-		this.ms_TrianglesLabel.name( 'Nb triangles' );
-	},
+    this.ms_TrianglesLabel.name( 'Nb triangles' );
+  },
   
   ApplyOnGroupElements : function ApplyOnGroupElements( expression ) {
   
@@ -170,7 +170,7 @@ var DEMO =
         break;
     }
   
-		this.ms_TrianglesLabel.name( Math.floor( nbTriangles ) + " triangles" );
+    this.ms_TrianglesLabel.name( Math.floor( nbTriangles ) + " triangles" );
   },
   
   LoadProjectedMesh : function LoadProjectedMesh() {
@@ -230,13 +230,13 @@ var DEMO =
   
   },
 
-	Display : function () {
+  Display : function () {
 
-		this.ms_Renderer.render( this.ms_Scene, this.ms_Camera );
+    this.ms_Renderer.render( this.ms_Scene, this.ms_Camera );
 
-	},
+  },
 
-	Update : function () {
+  Update : function () {
   
     this.ms_GlobalTime += this.ms_Clock.getDelta();
 
@@ -248,17 +248,17 @@ var DEMO =
       } );
     }
     
-		this.ms_Controls.update();
-		this.Display();
+    this.ms_Controls.update();
+    this.Display();
 
-	},
+  },
 
-	Resize : function ( inWidth, inHeight ) {
+  Resize : function ( inWidth, inHeight ) {
 
-		this.ms_Camera.aspect = inWidth / inHeight;
-		this.ms_Camera.updateProjectionMatrix();
-		this.ms_Renderer.setSize( inWidth, inHeight );
-		this.Display();
+    this.ms_Camera.aspect = inWidth / inHeight;
+    this.ms_Camera.updateProjectionMatrix();
+    this.ms_Renderer.setSize( inWidth, inHeight );
+    this.Display();
 
-	}
+  }
 };

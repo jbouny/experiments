@@ -182,7 +182,7 @@ THREE.LODPlane.prototype.generateLODGeometry = function generateLODGeometry( res
   
   // Allocate arrays
   var positions = new Float32Array( nbPoints * 3 );
-	var indices = new ( ( positions.length / 3 ) > 65535 ? Uint32Array : Uint16Array )( nbTriangles * 3 );
+  var indices = new ( ( positions.length / 3 ) > 65535 ? Uint32Array : Uint16Array )( nbTriangles * 3 );
   geometry.addAttribute( 'index', new THREE.BufferAttribute( indices, 1 ) );
   geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
   
