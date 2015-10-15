@@ -176,7 +176,7 @@ THREE.ShaderLib[ 'pbr' ] = {
     
 		"void main() ",
 		"{",
-      "float roughness = 1.0 - texture2D(grunge, vUv).x * 0.5;",
+      "float roughness = texture2D(grunge, vUv).x;",
       "vec3 reflectVec = normalize(reflect(vPosition - vEye, vNormal));",
       
       "vec3 viewDir = normalize(vEye - vPosition);",
@@ -185,9 +185,8 @@ THREE.ShaderLib[ 'pbr' ] = {
       "vec3 realAlbedo = baseColor - baseColor * metallic;",
       "vec3 realSpecularColor = mix(vec3(0.03), baseColor, metallic);",
       
-      "vec3 light1 = ComputeLight( realAlbedo, realSpecularColor, vNormal, lightPos, vec3(1.0), lightPos, viewDir, roughness);",
-
       "vec3 envColor = ComputeEnvColor(roughness, reflectVec);",
+      "vec3 light1 = ComputeLight( realAlbedo, realSpecularColor, vNormal, lightPos, envColor, lightPos, viewDir, roughness);",
 
       "vec3 envFresnel = Specular_F_Roughness(realSpecularColor, roughness * roughness, vNormal, viewDir);",
 
@@ -225,10 +224,10 @@ function initSky() {
     luminance: 1,
     inclination: 0.4, // elevation / inclination
     azimuth: 0.25, // Facing front,
-    metallic: 0.1,
-    baseColorR: 0.8,
-    baseColorG: 0.5,
-    baseColorB: 0.7
+    metallic: 0.3,
+    baseColorR: 1.0,
+    baseColorG: 0.8,
+    baseColorB: 0.9
   };
 
   var distance = 100000;
